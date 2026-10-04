@@ -120,33 +120,55 @@
     <script>
         const BASE_URL = 'https://zrx-wa.onrender.com';
 
-        // Sistema inteligente com contorno de CORS e rotas alternativas
+        // Varredura inteligente de rotas para descobrir automaticamente o caminho correto do servidor
         async function fetchApi(endpoint) {
-            let targetUrl = `${BASE_URL}/api/v2/hianime${endpoint}`;
-            
-            // Tenta fetch direto e se falhar por CORS/rede, usa proxy público de contorno
-            try {
-                let res = await fetch(targetUrl);
-                if (res.ok) return await res.json();
-            } catch (e) {
-                console.warn("Fetch direto falhou, tentando via proxy CORS...", e);
+            const rotasPossiveis = [
+                `${BASE_URL}/api/v2/hianime${endpoint}`,
+                `${BASE_URL}/api/v1/hianime${endpoint}`,
+                `${BASE_URL}/hianime${endpoint}`,
+                `${BASE_URL}${endpoint}`
+            ];
+
+            for (let url of rotasPossiveis) {
+                try {
+                    let res = await fetch(url);
+                    if (res.ok) {
+                        let json = await res.json();
+                        if (json && (json.success !== false || json.data || json.spotlightAnimes)) {
+                            console.log("Rota bem-sucedida:", url);
+                            return json;
+                        }
+                    }
+                } catch (e) {
+                    // Ignora e tenta a próxima rota
+                }
             }
 
-            // Fallback usando proxy CORS gratuito para garantir que nunca dê erro de ligação no GitHub Pages
-            let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-            let resProxy = await fetch(proxyUrl);
-            if (!resProxy.ok) throw new Error("Falha ao comunicar com o servidor.");
-            let dataProxy = await resProxy.json();
-            return JSON.parse(dataProxy.contents);
+            // Se o direto falhar por CORS, tenta via proxy rápido
+            for (let url of rotasPossiveis) {
+                try {
+                    let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                    let resProxy = await fetch(proxyUrl);
+                    if (resProxy.ok) {
+                        let dataProxy = await resProxy.json();
+                        let json = JSON.parse(dataProxy.contents);
+                        if (json && (json.success !== false || json.data || json.spotlightAnimes)) {
+                            return json;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            throw new Error(`Não foi possível comunicar com nenhuma rota para o endpoint: ${endpoint}`);
         }
 
         async function carregarCatalogo() {
             try {
                 let dados = await fetchApi('/home');
                 
-                let spotlight = dados.data?.spotlightAnimes || [];
-                let trending = dados.data?.trendingAnimes || [];
-                let latest = dados.data?.latestEpisodeAnimes || [];
+                let spotlight = dados.data?.spotlightAnimes || dados.spotlightAnimes || [];
+                let trending = dados.data?.trendingAnimes || dados.trendingAnimes || [];
+                let latest = dados.data?.latestEpisodeAnimes || dados.latestEpisodeAnimes || [];
 
                 let top3Grid = document.getElementById('top3-grid');
                 top3Grid.innerHTML = '';
@@ -221,7 +243,7 @@
 
             try {
                 let dados = await fetchApi(`/search?q=${encodeURIComponent(query)}`);
-                let listaAnimes = dados.data?.animes || [];
+                let listaAnimes = dados.data?.animes || dados.animes || [];
 
                 searchGrid.innerHTML = '';
                 if (listaAnimes.length === 0) {
@@ -256,7 +278,7 @@
             try {
                 try {
                     let infoDados = await fetchApi(`/anime/${animeId}`);
-                    let secoesTemporadas = infoDados.data?.seasons || [];
+                    let secoesTemporadas = infoDados.data?.seasons || infoDados.seasons || [];
                     
                     let seasonsSec = document.getElementById('seasons-section');
                     let seasonsList = document.getElementById('seasons-list');
@@ -281,7 +303,7 @@
 
                 let dados = await fetchApi(`/anime/${animeId}/episodes`);
                 epList.innerHTML = '';
-                let episodios = dados.data?.episodes || [];
+                let episodios = dados.data?.episodes || dados.episodes || [];
 
                 if (episodios.length === 0) {
                     epList.innerHTML = '<div style="color: #e50914;">Nenhum episódio encontrado.</div>';
@@ -312,7 +334,7 @@
 
             try {
                 let dados = await fetchApi(`/episode/sources?animeEpisodeId=${episodeId}`);
-                let sources = dados.data?.sources || [];
+                let sources = dados.data?.sources || dados.sources || [];
                 let videoUrl = sources.find(s => s.type === 'hls')?.url || sources[0]?.url;
 
                 if (!videoUrl) {
