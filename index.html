@@ -57,12 +57,12 @@
     </div>
 
     <script>
-        // Aponta diretamente para o teu backend no Render
-        const API_URL = 'https://zrx-wa.onrender.com';
+        // Atualizado para a rota correta da API v2 no Render
+        const API_URL = 'https://zrx-wa.onrender.com/api/v2/hianime';
 
         async function carregarCatalogo() {
             try {
-                let resposta = await fetch(`${API_URL}/api/v1/hianime/home`);
+                let resposta = await fetch(`${API_URL}/home`);
                 let dados = await resposta.json();
                 
                 let grid = document.getElementById('anime-grid');
@@ -104,7 +104,7 @@
             epList.innerHTML = '<div style="color: #aaa;">A carregar lista de episódios...</div>';
 
             try {
-                let resposta = await fetch(`${API_URL}/api/v1/hianime/anime/${animeId}/episodes`);
+                let resposta = await fetch(`${API_URL}/anime/${animeId}/episodes`);
                 let dados = await resposta.json();
 
                 epList.innerHTML = '';
@@ -139,7 +139,7 @@
             if(btnElement) btnElement.classList.add('active');
 
             try {
-                let resposta = await fetch(`${API_URL}/api/v1/hianime/episode/sources?animeEpisodeId=${episodeId}`);
+                let resposta = await fetch(`${API_URL}/episode/sources?animeEpisodeId=${episodeId}`);
                 let dados = await resposta.json();
 
                 let sources = dados.data?.sources || [];
