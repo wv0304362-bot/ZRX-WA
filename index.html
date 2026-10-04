@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zeryx Streaming - Animes</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- Ferramenta de consola no telemóvel para veres o que se passa -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #0f0f0f; color: #fff; font-family: Arial, sans-serif; padding: 15px; }
@@ -57,18 +60,42 @@
     </div>
 
     <script>
-        // Atualizado para a rota correta da API v2 no Render
-        const API_URL = 'https://zrx-wa.onrender.com/api/v2/hianime';
+        const BASE_URL = 'https://zrx-wa.onrender.com';
+
+        // Tenta várias rotas possíveis para evitar erros de 404 caso o prefixo varie
+        async function fetchApi(endpoint) {
+            const rotasPossiveis = [
+                `${BASE_URL}/api/v2/hianime${endpoint}`,
+                `${BASE_URL}/api/v1/hianime${endpoint}`,
+                `${BASE_URL}${endpoint}`
+            ];
+
+            for (let url of rotasPossiveis) {
+                try {
+                    let res = await fetch(url);
+                    if (res.ok) {
+                        let json = await res.json();
+                        // Se a API retornar sucesso ou dados válidos, usa esta rota
+                        if (json && (json.success !== false || json.data)) {
+                            console.log("Rota bem-sucedida:", url);
+                            return json;
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Tentativa falhou para:", url);
+                }
+            }
+            throw new Error("Todas as rotas da API falharam.");
+        }
 
         async function carregarCatalogo() {
             try {
-                let resposta = await fetch(`${API_URL}/home`);
-                let dados = await resposta.json();
+                let dados = await fetchApi('/home');
                 
                 let grid = document.getElementById('anime-grid');
                 grid.innerHTML = '';
 
-                let listaAnimes = dados.data?.spotlightAnimes || dados.data?.trendingAnimes || [];
+                let listaAnimes = dados.data?.spotlightAnimes || dados.data?.trendingAnimes || dados.spotlightAnimes || [];
 
                 if (listaAnimes.length === 0) {
                     grid.innerHTML = '<div class="loading">Nenhum anime encontrado de momento.</div>';
@@ -90,7 +117,7 @@
                 document.getElementById('anime-grid').innerHTML = `
                     <div class="loading" style="color: #e50914;">
                         Erro ao conectar com o Render.<br>
-                        <small style="color: #bbb;">Dica: Se o servidor estiver inativo, aguarde alguns segundos e atualize a página.</small>
+                        <small style="color: #bbb;">Dica: Verifique a consola flutuante (Eruda) no canto do ecrã.</small>
                     </div>`;
             }
         }
@@ -104,11 +131,10 @@
             epList.innerHTML = '<div style="color: #aaa;">A carregar lista de episódios...</div>';
 
             try {
-                let resposta = await fetch(`${API_URL}/anime/${animeId}/episodes`);
-                let dados = await resposta.json();
+                let dados = await fetchApi(`/anime/${animeId}/episodes`);
 
                 epList.innerHTML = '';
-                let episodios = dados.data?.episodes || [];
+                let episodios = dados.data?.episodes || dados.episodes || [];
 
                 if (episodios.length === 0) {
                     epList.innerHTML = '<div style="color: #e50914;">Nenhum episódio encontrado.</div>';
@@ -124,7 +150,6 @@
                     epList.appendChild(btn);
                 });
 
-                // Toca o primeiro episódio por defeito
                 if(episodios.length > 0) {
                     assistirEpisodio(episodios[0].episodeId, document.getElementById(`ep-${episodios[0].episodeId}`));
                 }
@@ -139,10 +164,9 @@
             if(btnElement) btnElement.classList.add('active');
 
             try {
-                let resposta = await fetch(`${API_URL}/episode/sources?animeEpisodeId=${episodeId}`);
-                let dados = await resposta.json();
+                let dados = await fetchApi(`/episode/sources?animeEpisodeId=${episodeId}`);
 
-                let sources = dados.data?.sources || [];
+                let sources = dados.data?.sources || dados.sources || [];
                 let videoUrl = sources.find(s => s.type === 'hls')?.url || sources[0]?.url;
 
                 if (!videoUrl) {
