@@ -118,21 +118,26 @@
     </div>
 
     <script>
-        // Mantém o link exato do teu servidor no Render
         const BASE_URL = 'https://zrx-wa.onrender.com';
 
-        // Comunicação direta com a versão v2 da hianime-api que o servidor entende
+        // Sistema inteligente com contorno de CORS e rotas alternativas
         async function fetchApi(endpoint) {
-            let url = `${BASE_URL}/api/v2/hianime${endpoint}`;
+            let targetUrl = `${BASE_URL}/api/v2/hianime${endpoint}`;
+            
+            // Tenta fetch direto e se falhar por CORS/rede, usa proxy público de contorno
             try {
-                let res = await fetch(url);
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                let json = await res.json();
-                return json;
+                let res = await fetch(targetUrl);
+                if (res.ok) return await res.json();
             } catch (e) {
-                console.error("Erro no fetch para:", url, e);
-                throw e;
+                console.warn("Fetch direto falhou, tentando via proxy CORS...", e);
             }
+
+            // Fallback usando proxy CORS gratuito para garantir que nunca dê erro de ligação no GitHub Pages
+            let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+            let resProxy = await fetch(proxyUrl);
+            if (!resProxy.ok) throw new Error("Falha ao comunicar com o servidor.");
+            let dataProxy = await resProxy.json();
+            return JSON.parse(dataProxy.contents);
         }
 
         async function carregarCatalogo() {
@@ -143,7 +148,6 @@
                 let trending = dados.data?.trendingAnimes || [];
                 let latest = dados.data?.latestEpisodeAnimes || [];
 
-                // 1. Top 3 em Destaque no topo
                 let top3Grid = document.getElementById('top3-grid');
                 top3Grid.innerHTML = '';
                 
@@ -164,7 +168,6 @@
                     top3Grid.appendChild(card);
                 });
 
-                // 2. Animes de Ação (Arrastar para o lado)
                 let actionGrid = document.getElementById('action-grid');
                 actionGrid.innerHTML = '';
                 let listaAcao = trending.length > 0 ? trending : spotlight;
@@ -172,7 +175,6 @@
                     actionGrid.appendChild(criarCardHorizontal(anime));
                 });
 
-                // 3. Animes de Romance (Arrastar para o lado)
                 let romanceGrid = document.getElementById('romance-grid');
                 romanceGrid.innerHTML = '';
                 let listaRomance = latest.length > 0 ? latest : spotlight.slice().reverse();
@@ -252,7 +254,6 @@
             epList.innerHTML = '<div style="color: #aaa;">A carregar episódios e temporadas...</div>';
 
             try {
-                // Tenta carregar informações de temporadas
                 try {
                     let infoDados = await fetchApi(`/anime/${animeId}`);
                     let secoesTemporadas = infoDados.data?.seasons || [];
