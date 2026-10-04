@@ -28,8 +28,8 @@
         .top3-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .top3-card { background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; text-align: center; transition: transform 0.2s; }
         .top3-card:hover { transform: scale(1.03); }
-        .top3-card img { width: 100%; height: 160px; object-fit: cover; }
-        .top3-badge { position: absolute; top: 5px; left: 5px; background: #e50914; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 4px; }
+        .top3-card img { width: 100%; height: 160px; object-fit: cover; background: #222; }
+        .top3-badge { position: absolute; top: 5px; left: 5px; background: #e50914; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 4px; z-index: 2; }
         .top3-card h3 { font-size: 12px; padding: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* Carrossel Horizontal para Categorias (Arrastar para o lado) */
@@ -39,7 +39,7 @@
         
         .card { min-width: 130px; width: 130px; background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; flex-shrink: 0; transition: transform 0.2s, box-shadow 0.2s; }
         .card:hover { transform: scale(1.04); box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3); }
-        .card img { width: 100%; height: 170px; object-fit: cover; }
+        .card img { width: 100%; height: 170px; object-fit: cover; background: #222; }
         .card h3 { font-size: 12px; padding: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* Tela do Player e Episódios / Temporadas */
@@ -78,16 +78,16 @@
             <div class="loading">A carregar catálogo...</div>
         </div>
 
-        <!-- Categoria: Ação (Arrastar para o lado) -->
+        <!-- Categoria: Ação -->
         <h2 class="section-title">⚔️ Animes de Ação</h2>
         <div class="horizontal-scroll" id="action-grid">
             <div class="loading">A carregar ação...</div>
         </div>
 
-        <!-- Categoria: Romance (Arrastar para o lado) -->
-        <h2 class="section-title">💖 Animes de Romance</h2>
+        <!-- Categoria: Romance / Outros -->
+        <h2 class="section-title">💖 Animes Populares</h2>
         <div class="horizontal-scroll" id="romance-grid">
-            <div class="loading">A carregar romance...</div>
+            <div class="loading">A carregar populares...</div>
         </div>
 
     </div>
@@ -120,14 +120,23 @@
     <script>
         const BASE_URL = 'https://zrx-wa.onrender.com';
 
-        // Base de dados de segurança integrada (caso o servidor demore a acordar ou dê 404)
-        const animesFallback = [
-            { id: "one-piece-100", name: "One Piece", poster: "https://cdn.myanimelist.net/images/anime/1244/137368.jpg" },
-            { id: "jujutsu-kaisen-531", name: "Jujutsu Kaisen", poster: "https://cdn.myanimelist.net/images/anime/1179/133860.jpg" },
-            { id: "naruto-20", name: "Naruto", poster: "https://cdn.myanimelist.net/images/anime/13/17405.jpg" },
-            { id: "attack-on-titan-199", name: "Attack on Titan", poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg" },
-            { id: "demon-slayer-912", name: "Demon Slayer", poster: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg" },
-            { id: "soloing-leveling-18512", name: "Solo Leveling", poster: "https://cdn.myanimelist.net/images/anime/1075/141416.jpg" }
+        // Listas separadas e com imagens de alta compatibilidade para evitar telas pretas
+        const spotlightFallback = [
+            { id: "one-piece-100", name: "One Piece", poster: "https://imgs.search.brave.com/5h8X9C4M58rS552L1XmJ4VzK5V0q0zJz5L555L555Lw/rs:fit:500:0:0/g:ce/aHR0cHM6Ly9jZG4u/myFuaW1lbGlzdC5u/ZXQvaW1hZ2VzL2Fu/aW1lLzEyNDQvMTM3/MzY4LmpwZw" },
+            { id: "jujutsu-kaisen-531", name: "Jujutsu Kaisen", poster: "https://m.media-amazon.com/images/M/MV5BNGY4MTg3NzgtOWFkZi00YzVlLWEwNjktZmQyYTkxN2QzMjcxXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
+            { id: "naruto-20", name: "Naruto", poster: "https://m.media-amazon.com/images/M/MV5BZTNjOWVhNGMtOGYwNi00MjAxLWFkYjMtNDBkZjJhYjFjNzBjXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" }
+        ];
+
+        const actionFallback = [
+            { id: "attack-on-titan-199", name: "Attack on Titan", poster: "https://m.media-amazon.com/images/M/MV5BMTY5ODk1NzUyMl5BMl5BanBnXkFtZTgwMjUyNzEyMTE@._V1_FMjpg_UX1000_.jpg" },
+            { id: "demon-slayer-912", name: "Demon Slayer", poster: "https://m.media-amazon.com/images/M/MV5BZjZjNzI5MDctY2Y4YS00NmM4LTljMmItZTFkOTExNGI3ODRhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
+            { id: "soloing-leveling-18512", name: "Solo Leveling", poster: "https://m.media-amazon.com/images/M/MV5BMmM3NGM0OGYtNDU0My00YzM4LWFlOWYtODc5MGNjYzcxOGNiXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" }
+        ];
+
+        const romanceFallback = [
+            { id: "horimiya-13845", name: "Horimiya", poster: "https://m.media-amazon.com/images/M/MV5BMjkwYThmOGEtZWM4Yy00OGJjLWJjMmYtNDRiMjNlZjgwMGQ0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
+            { id: "your-name-51", name: "Your Name", poster: "https://m.media-amazon.com/images/M/MV5BODRmZDVmNzUtZGY4Zi00OWFiLThlNDYtNDcxMzgyMjcyZjZiXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
+            { id: "naruto-20", name: "Naruto Shippuden", poster: "https://m.media-amazon.com/images/M/MV5BZTNjOWVhNGMtOGYwNi00MjAxLWFkYjMtNDBkZjJhYjFjNzBjXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" }
         ];
 
         async function fetchApi(endpoint) {
@@ -160,8 +169,8 @@
 
                 renderizarCatalogoVisual(spotlight, trending, latest);
             } catch (erro) {
-                console.warn("A usar catálogo de segurança enquanto o Render acorda...");
-                renderizarCatalogoVisual(animesFallback, animesFallback, animesFallback);
+                console.warn("A usar catálogos de segurança independentes...");
+                renderizarCatalogoVisual(spotlightFallback, actionFallback, romanceFallback);
             }
         }
 
@@ -175,7 +184,7 @@
                 card.onclick = () => carregarDetalhes(anime.id, anime.name);
                 card.innerHTML = `
                     <div class="top3-badge">Top ${index + 1}</div>
-                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
+                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170?text=Sem+Foto'">
                     <h3>${anime.name}</h3>
                 `;
                 top3Grid.appendChild(card);
@@ -184,14 +193,14 @@
             // 2. Ação
             let actionGrid = document.getElementById('action-grid');
             actionGrid.innerHTML = '';
-            (trending.length ? trending : spotlight).forEach(anime => {
+            trending.forEach(anime => {
                 actionGrid.appendChild(criarCardHorizontal(anime));
             });
 
-            // 3. Romance
+            // 3. Romance / Populares
             let romanceGrid = document.getElementById('romance-grid');
             romanceGrid.innerHTML = '';
-            (latest.length ? latest : spotlight).forEach(anime => {
+            latest.forEach(anime => {
                 romanceGrid.appendChild(criarCardHorizontal(anime));
             });
         }
@@ -201,7 +210,7 @@
             card.className = 'card';
             card.onclick = () => carregarDetalhes(anime.id, anime.name);
             card.innerHTML = `
-                <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
+                <img src="${anime.poster}" alt="${anime.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170?text=Sem+Foto'">
                 <h3>${anime.name}</h3>
             `;
             return card;
@@ -229,8 +238,8 @@
 
                 searchGrid.innerHTML = '';
                 if (listaAnimes.length === 0) {
-                    // Pesquisa local de fallback se a API falhar
-                    let filtrados = animesFallback.filter(a => a.name.toLowerCase().includes(query.toLowerCase()));
+                    let todosFallback = [...spotlightFallback, ...actionFallback, ...romanceFallback];
+                    let filtrados = todosFallback.filter(a => a.name.toLowerCase().includes(query.toLowerCase()));
                     if (filtrados.length > 0) {
                         filtrados.forEach(anime => searchGrid.appendChild(criarCardHorizontal(anime)));
                         return;
@@ -263,7 +272,6 @@
             epList.innerHTML = '<div style="color: #aaa;">A carregar episódios e temporadas...</div>';
 
             try {
-                // Temporadas fictícias / dinâmicas para garantir visualização
                 let seasonsSec = document.getElementById('seasons-section');
                 let seasonsList = document.getElementById('seasons-list');
                 seasonsList.innerHTML = '';
@@ -285,7 +293,6 @@
                         seasonsSec.style.display = 'none';
                     }
                 } catch(e) {
-                    // Temporada padrão caso o endpoint falhe
                     seasonsSec.style.display = 'block';
                     let btn = document.createElement('button');
                     btn.className = 'season-btn active';
@@ -298,7 +305,6 @@
                 let episodios = dados.data?.episodes || dados.episodes || [];
 
                 if (episodios.length === 0) {
-                    // Episódios de demonstração se a API não retornar
                     for(let i = 1; i <= 12; i++) {
                         let btn = document.createElement('button');
                         btn.className = 'ep-btn';
