@@ -21,14 +21,28 @@
         .search-btn { background: #e50914; color: #fff; border: none; padding: 0 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .search-btn:hover { background: #b80710; }
 
-        /* Grid de Animes */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
-        .card { background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-        .card:hover { transform: scale(1.04); box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3); }
-        .card img { width: 100%; height: 190px; object-fit: cover; }
-        .card h3 { font-size: 13px; padding: 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* Secções e Títulos */
+        .section-title { font-size: 16px; margin: 20px 0 10px 0; border-left: 4px solid #e50914; padding-left: 8px; }
 
-        /* Tela do Player e Episódios */
+        /* Top 3 Destaques Especiais */
+        .top3-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .top3-card { background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; text-align: center; transition: transform 0.2s; }
+        .top3-card:hover { transform: scale(1.03); }
+        .top3-card img { width: 100%; height: 160px; object-fit: cover; }
+        .top3-badge { position: absolute; top: 5px; left: 5px; background: #e50914; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 4px; }
+        .top3-card h3 { font-size: 12px; padding: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Carrossel Horizontal para Categorias (Arrastar para o lado) */
+        .horizontal-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin; scrollbar-color: #e50914 #222; }
+        .horizontal-scroll::-webkit-scrollbar { height: 6px; }
+        .horizontal-scroll::-webkit-scrollbar-thumb { background: #e50914; border-radius: 3px; }
+        
+        .card { min-width: 130px; width: 130px; background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; flex-shrink: 0; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:hover { transform: scale(1.04); box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3); }
+        .card img { width: 100%; height: 170px; object-fit: cover; }
+        .card h3 { font-size: 12px; padding: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Tela do Player e Episódios / Temporadas */
         #watch-section { display: none; margin-top: 20px; }
         video { width: 100%; max-height: 480px; background: #000; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.7); }
         .episodes-container { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-top: 15px; scrollbar-width: thin; scrollbar-color: #e50914 #222; }
@@ -36,36 +50,68 @@
         .ep-btn:hover, .ep-btn.active { background: #e50914; border-color: #e50914; }
         .back-btn { background: #222; color: #fff; border: 1px solid #555; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
         .back-btn:hover { background: #444; }
-        .loading { text-align: center; color: #aaa; grid-column: 1 / -1; padding: 30px; font-size: 15px; }
+        
+        /* Informações e Temporadas */
+        .seasons-container { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .season-btn { background: #181818; color: #fff; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .season-btn:hover, .season-btn.active { background: #e50914; border-color: #e50914; }
+
+        .loading { text-align: center; color: #aaa; padding: 30px; font-size: 15px; width: 100%; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>Zeryx Animes</h1>
-        <!-- Nova Operação: Barra de Pesquisa -->
         <div class="search-container">
             <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar anime..." onkeypress="verificarEnter(event)">
             <button class="search-btn" onclick="pesquisarAnime()">🔍</button>
         </div>
     </header>
 
-    <!-- Catálogo -->
+    <!-- Catálogo Principal -->
     <div id="catalog-section">
-        <h2 id="section-title" style="font-size: 16px; margin-bottom: 12px; border-left: 4px solid #e50914; padding-left: 8px;">Animes em Destaque</h2>
-        <div class="grid" id="anime-grid">
-            <div class="loading">A carregar catálogo do servidor (o Render pode demorar até 40s a acordar)...</div>
+        
+        <!-- Top 3 Animes em Destaque -->
+        <h2 class="section-title">🏆 Top 3 em Destaque</h2>
+        <div class="top3-container" id="top3-grid">
+            <div class="loading">A carregar Top 3...</div>
         </div>
+
+        <!-- Categoria: Ação (Arrastar para o lado) -->
+        <h2 class="section-title">⚔️ Animes de Ação</h2>
+        <div class="horizontal-scroll" id="action-grid">
+            <div class="loading">A carregar acão...</div>
+        </div>
+
+        <!-- Categoria: Romance (Arrastar para o lado) -->
+        <h2 class="section-title">💖 Animes de Romance</h2>
+        <div class="horizontal-scroll" id="romance-grid">
+            <div class="loading">A carregar romance...</div>
+        </div>
+
     </div>
 
-    <!-- Reprodução -->
+    <!-- Tela de Resultados da Pesquisa (Oculta por defeito) -->
+    <div id="search-results-section" style="display:none;">
+        <h2 class="section-title" id="search-title-text">Resultados da Pesquisa</h2>
+        <div class="horizontal-scroll" id="search-grid" style="flex-wrap: wrap; overflow-x: visible;"></div>
+    </div>
+
+    <!-- Reprodução e Temporadas -->
     <div id="watch-section">
         <button class="back-btn" onclick="voltarCatalogo()">⬅ Voltar ao Catálogo</button>
-        <h2 id="anime-title" style="margin-bottom: 12px; font-size: 18px; color: #e50914;"></h2>
+        <h2 id="anime-title" style="margin-bottom: 8px; font-size: 18px; color: #e50914;"></h2>
         
         <video id="videoPlayer" controls autoplay></video>
         
-        <h3 style="margin-top: 20px; font-size: 15px;">Episódios Disponíveis:</h3>
+        <!-- Temporadas -->
+        <div id="seasons-section" style="margin-top: 15px; display: none;">
+            <h3 style="font-size: 14px; margin-bottom: 6px; color: #ccc;">Temporadas:</h3>
+            <div class="seasons-container" id="seasons-list"></div>
+        </div>
+
+        <h3 style="margin-top: 15px; font-size: 14px; color: #ccc;">Episódios Disponíveis:</h3>
         <div class="episodes-container" id="episodes-list">
             <div style="color: #aaa;">A carregar episódios...</div>
         </div>
@@ -74,7 +120,6 @@
     <script>
         const BASE_URL = 'https://zrx-wa.onrender.com';
 
-        // Sistema inteligente de rotas para evitar 404
         async function fetchApi(endpoint) {
             const rotasPossiveis = [
                 `${BASE_URL}/api/v2/hianime${endpoint}`,
@@ -101,54 +146,93 @@
         async function carregarCatalogo() {
             try {
                 let dados = await fetchApi('/home');
-                document.getElementById('section-title').innerText = "Animes em Destaque";
                 
-                let grid = document.getElementById('anime-grid');
-                grid.innerHTML = '';
+                let spotlight = dados.data?.spotlightAnimes || dados.spotlightAnimes || [];
+                let trending = dados.data?.trendingAnimes || dados.trendingAnimes || [];
+                let latest = dados.data?.latestEpisodeAnimes || [];
 
-                let listaAnimes = dados.data?.spotlightAnimes || dados.data?.trendingAnimes || dados.spotlightAnimes || [];
+                // Renderiza o Top 3 em Destaque
+                let top3Grid = document.getElementById('top3-grid');
+                top3Grid.innerHTML = '';
+                spotlight.slice(0, 3).forEach((anime, index) => {
+                    let card = document.createElement('div');
+                    card.className = 'top3-card';
+                    card.onclick = () => carregarDetalhes(anime.id, anime.name);
+                    card.innerHTML = `
+                        <div class="top3-badge">Top ${index + 1}</div>
+                        <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
+                        <h3>${anime.name}</h3>
+                    `;
+                    top3Grid.appendChild(card);
+                });
 
-                if (listaAnimes.length === 0) {
-                    grid.innerHTML = '<div class="loading">Nenhum anime encontrado de momento.</div>';
-                    return;
-                }
+                // Renderiza Animes de Ação (arrastar para o lado)
+                let actionGrid = document.getElementById('action-grid');
+                actionGrid.innerHTML = '';
+                (trending.length > 0 ? trending : spotlight).forEach(anime => {
+                    actionGrid.appendChild(criarCardHorizontal(anime));
+                });
 
-                renderizarGrid(listaAnimes);
+                // Renderiza Animes de Romance (arrastar para o lado)
+                let romanceGrid = document.getElementById('romance-grid');
+                romanceGrid.innerHTML = '';
+                (latest.length > 0 ? latest : spotlight).forEach(anime => {
+                    romanceGrid.appendChild(criarCardHorizontal(anime));
+                });
+
             } catch (erro) {
                 console.error("Erro ao carregar catálogo:", erro);
-                document.getElementById('anime-grid').innerHTML = `
+                document.getElementById('catalog-section').innerHTML = `
                     <div class="loading" style="color: #e50914;">
                         Erro ao conectar com o Render.<br>
-                        <small style="color: #bbb;">Verifique a consola flutuante (Eruda) para mais detalhes.</small>
+                        <small style="color: #bbb;">Dica: Utilize o UptimeMonitor para manter o servidor acordado 24h.</small>
                     </div>`;
             }
         }
 
-        // Nova Operação: Função de Pesquisa
+        function criarCardHorizontal(anime) {
+            let card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => carregarDetalhes(anime.id, anime.name);
+            card.innerHTML = `
+                <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
+                <h3>${anime.name}</h3>
+            `;
+            return card;
+        }
+
         async function pesquisarAnime() {
             let query = document.getElementById('searchInput').value.trim();
             if (!query) {
-                carregarCatalogo();
+                document.getElementById('search-results-section').style.display = 'none';
+                document.getElementById('catalog-section').style.display = 'block';
                 return;
             }
 
-            let grid = document.getElementById('anime-grid');
-            grid.innerHTML = '<div class="loading">A pesquisar animes...</div>';
-            document.getElementById('section-title').innerText = `Resultados para: "${query}"`;
+            document.getElementById('catalog-section').style.display = 'none';
+            let searchSec = document.getElementById('search-results-section');
+            searchSec.style.display = 'block';
+            
+            let searchGrid = document.getElementById('search-grid');
+            searchGrid.innerHTML = '<div class="loading">A pesquisar animes...</div>';
+            document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
 
             try {
                 let dados = await fetchApi(`/search?q=${encodeURIComponent(query)}`);
                 let listaAnimes = dados.data?.animes || dados.animes || [];
 
+                searchGrid.innerHTML = '';
                 if (listaAnimes.length === 0) {
-                    grid.innerHTML = '<div class="loading">Nenhum anime encontrado com esse nome.</div>';
+                    searchGrid.innerHTML = '<div class="loading">Nenhum anime encontrado com esse nome.</div>';
                     return;
                 }
 
-                renderizarGrid(listaAnimes);
+                listaAnimes.forEach(anime => {
+                    searchGrid.appendChild(criarCardHorizontal(anime));
+                });
             } catch (erro) {
                 console.error("Erro na pesquisa:", erro);
-                grid.innerHTML = '<div class="loading" style="color: #e50914;">Erro ao realizar a pesquisa.</div>';
+                searchGrid.innerHTML = '<div class="loading" style="color: #e50914;">Erro ao realizar a pesquisa.</div>';
             }
         }
 
@@ -158,33 +242,39 @@
             }
         }
 
-        function renderizarGrid(listaAnimes) {
-            let grid = document.getElementById('anime-grid');
-            grid.innerHTML = '';
-
-            listaAnimes.forEach(anime => {
-                let card = document.createElement('div');
-                card.className = 'card';
-                card.onclick = () => carregarDetalhes(anime.id, anime.name);
-                card.innerHTML = `
-                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
-                    <h3>${anime.name}</h3>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
         async function carregarDetalhes(animeId, animeTitle) {
             document.getElementById('catalog-section').style.display = 'none';
+            document.getElementById('search-results-section').style.display = 'none';
             document.getElementById('watch-section').style.display = 'block';
             document.getElementById('anime-title').innerText = animeTitle;
             
             let epList = document.getElementById('episodes-list');
-            epList.innerHTML = '<div style="color: #aaa;">A carregar lista de episódios...</div>';
+            epList.innerHTML = '<div style="color: #aaa;">A carregar episódios e temporadas...</div>';
 
             try {
-                let dados = await fetchApi(`/anime/${animeId}/episodes`);
+                // Tenta carregar informações de temporadas se disponíveis
+                let infoDados = await fetchApi(`/anime/${animeId}`);
+                let secoesTemporadas = infoDados.data?.seasons || infoDados.seasons || [];
+                
+                let seasonsSec = document.getElementById('seasons-section');
+                let seasonsList = document.getElementById('seasons-list');
+                seasonsList.innerHTML = '';
 
+                if (secoesTemporadas.length > 1) {
+                    seasonsSec.style.display = 'block';
+                    secoesTemporadas.forEach(seas => {
+                        let btn = document.createElement('button');
+                        btn.className = 'season-btn';
+                        btn.innerText = seas.name || `Temporada`;
+                        if(seas.id === animeId) btn.classList.add('active');
+                        btn.onclick = () => carregarDetalhes(seas.id, `${animeTitle} - ${seas.name}`);
+                        seasonsList.appendChild(btn);
+                    });
+                } else {
+                    seasonsSec.style.display = 'none';
+                }
+
+                let dados = await fetchApi(`/anime/${animeId}/episodes`);
                 epList.innerHTML = '';
                 let episodios = dados.data?.episodes || dados.episodes || [];
 
@@ -206,7 +296,7 @@
                     assistirEpisodio(episodios[0].episodeId, document.getElementById(`ep-${episodios[0].episodeId}`));
                 }
             } catch (erro) {
-                console.error("Erro ao carregar episódios:", erro);
+                console.error("Erro ao carregar detalhes:", erro);
                 epList.innerHTML = '<div style="color: #e50914;">Erro ao carregar os episódios.</div>';
             }
         }
@@ -217,7 +307,6 @@
 
             try {
                 let dados = await fetchApi(`/episode/sources?animeEpisodeId=${episodeId}`);
-
                 let sources = dados.data?.sources || dados.sources || [];
                 let videoUrl = sources.find(s => s.type === 'hls')?.url || sources[0]?.url;
 
@@ -243,7 +332,12 @@
 
         function voltarCatalogo() {
             document.getElementById('watch-section').style.display = 'none';
-            document.getElementById('catalog-section').style.display = 'block';
+            let query = document.getElementById('searchInput').value.trim();
+            if(query) {
+                document.getElementById('search-results-section').style.display = 'block';
+            } else {
+                document.getElementById('catalog-section').style.display = 'block';
+            }
             let video = document.getElementById('videoPlayer');
             video.pause();
             video.src = "";
