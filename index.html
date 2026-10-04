@@ -75,13 +75,13 @@
         <!-- Top 3 Animes em Destaque -->
         <h2 class="section-title">🏆 Top 3 em Destaque</h2>
         <div class="top3-container" id="top3-grid">
-            <div class="loading">A carregar Top 3...</div>
+            <div class="loading">A carregar Top 3... (O Render pode demorar até 40s a acordar)</div>
         </div>
 
         <!-- Categoria: Ação (Arrastar para o lado) -->
         <h2 class="section-title">⚔️ Animes de Ação</h2>
         <div class="horizontal-scroll" id="action-grid">
-            <div class="loading">A carregar acão...</div>
+            <div class="loading">A carregar ação...</div>
         </div>
 
         <!-- Categoria: Romance (Arrastar para o lado) -->
@@ -92,7 +92,7 @@
 
     </div>
 
-    <!-- Tela de Resultados da Pesquisa (Oculta por defeito) -->
+    <!-- Tela de Resultados da Pesquisa -->
     <div id="search-results-section" style="display:none;">
         <h2 class="section-title" id="search-title-text">Resultados da Pesquisa</h2>
         <div class="horizontal-scroll" id="search-grid" style="flex-wrap: wrap; overflow-x: visible;"></div>
@@ -120,10 +120,12 @@
     <script>
         const BASE_URL = 'https://zrx-wa.onrender.com';
 
+        // Varredura inteligente por rotas comuns da hianime-api para evitar 404
         async function fetchApi(endpoint) {
             const rotasPossiveis = [
                 `${BASE_URL}/api/v2/hianime${endpoint}`,
                 `${BASE_URL}/api/v1/hianime${endpoint}`,
+                `${BASE_URL}/hianime${endpoint}`,
                 `${BASE_URL}${endpoint}`
             ];
 
@@ -132,28 +134,36 @@
                     let res = await fetch(url);
                     if (res.ok) {
                         let json = await res.json();
-                        if (json && (json.success !== false || json.data)) {
+                        if (json && (json.success !== false || json.data || json.spotlightAnimes)) {
+                            console.log("Sucesso na rota:", url);
                             return json;
                         }
                     }
                 } catch (e) {
-                    console.warn("Tentativa falhou para:", url);
+                    console.warn("Falha ao tentar:", url);
                 }
             }
-            throw new Error("Todas as rotas da API falharam.");
+            throw new Error(`Endpoint ${endpoint} indisponível no servidor.`);
         }
 
         async function carregarCatalogo() {
             try {
                 let dados = await fetchApi('/home');
                 
+                // Extrai dados independentemente da versão do JSON da API
                 let spotlight = dados.data?.spotlightAnimes || dados.spotlightAnimes || [];
                 let trending = dados.data?.trendingAnimes || dados.trendingAnimes || [];
-                let latest = dados.data?.latestEpisodeAnimes || [];
+                let latest = dados.data?.latestEpisodeAnimes || dados.latestEpisodeAnimes || [];
 
-                // Renderiza o Top 3 em Destaque
+                // 1. Top 3 em Destaque no topo
                 let top3Grid = document.getElementById('top3-grid');
                 top3Grid.innerHTML = '';
+                
+                if (spotlight.length === 0) {
+                    top3Grid.innerHTML = '<div class="loading">Nenhum destaque encontrado.</div>';
+                    return;
+                }
+
                 spotlight.slice(0, 3).forEach((anime, index) => {
                     let card = document.createElement('div');
                     card.className = 'top3-card';
@@ -166,17 +176,19 @@
                     top3Grid.appendChild(card);
                 });
 
-                // Renderiza Animes de Ação (arrastar para o lado)
+                // 2. Animes de Ação (Arrastar para o lado)
                 let actionGrid = document.getElementById('action-grid');
                 actionGrid.innerHTML = '';
-                (trending.length > 0 ? trending : spotlight).forEach(anime => {
+                let listaAcao = trending.length > 0 ? trending : spotlight;
+                listaAcao.forEach(anime => {
                     actionGrid.appendChild(criarCardHorizontal(anime));
                 });
 
-                // Renderiza Animes de Romance (arrastar para o lado)
+                // 3. Animes de Romance (Arrastar para o lado)
                 let romanceGrid = document.getElementById('romance-grid');
                 romanceGrid.innerHTML = '';
-                (latest.length > 0 ? latest : spotlight).forEach(anime => {
+                let listaRomance = latest.length > 0 ? latest : spotlight.slice().reverse();
+                listaRomance.forEach(anime => {
                     romanceGrid.appendChild(criarCardHorizontal(anime));
                 });
 
@@ -184,8 +196,8 @@
                 console.error("Erro ao carregar catálogo:", erro);
                 document.getElementById('catalog-section').innerHTML = `
                     <div class="loading" style="color: #e50914;">
-                        Erro ao conectar com o Render.<br>
-                        <small style="color: #bbb;">Dica: Utilize o UptimeMonitor para manter o servidor acordado 24h.</small>
+                        Erro ao conectar com o Render ou rotas 404.<br>
+                        <small style="color: #bbb;">Dica: Certifique-se de que o UptimeRobot está a pings o link correto e que o servidor acordou.</small>
                     </div>`;
             }
         }
@@ -252,26 +264,30 @@
             epList.innerHTML = '<div style="color: #aaa;">A carregar episódios e temporadas...</div>';
 
             try {
-                // Tenta carregar informações de temporadas se disponíveis
-                let infoDados = await fetchApi(`/anime/${animeId}`);
-                let secoesTemporadas = infoDados.data?.seasons || infoDados.seasons || [];
-                
-                let seasonsSec = document.getElementById('seasons-section');
-                let seasonsList = document.getElementById('seasons-list');
-                seasonsList.innerHTML = '';
+                // Tenta carregar informações de temporadas
+                try {
+                    let infoDados = await fetchApi(`/anime/${animeId}`);
+                    let secoesTemporadas = infoDados.data?.seasons || infoDados.seasons || [];
+                    
+                    let seasonsSec = document.getElementById('seasons-section');
+                    let seasonsList = document.getElementById('seasons-list');
+                    seasonsList.innerHTML = '';
 
-                if (secoesTemporadas.length > 1) {
-                    seasonsSec.style.display = 'block';
-                    secoesTemporadas.forEach(seas => {
-                        let btn = document.createElement('button');
-                        btn.className = 'season-btn';
-                        btn.innerText = seas.name || `Temporada`;
-                        if(seas.id === animeId) btn.classList.add('active');
-                        btn.onclick = () => carregarDetalhes(seas.id, `${animeTitle} - ${seas.name}`);
-                        seasonsList.appendChild(btn);
-                    });
-                } else {
-                    seasonsSec.style.display = 'none';
+                    if (secoesTemporadas.length > 1) {
+                        seasonsSec.style.display = 'block';
+                        secoesTemporadas.forEach(seas => {
+                            let btn = document.createElement('button');
+                            btn.className = 'season-btn';
+                            btn.innerText = seas.name || `Temporada`;
+                            if(seas.id === animeId) btn.classList.add('active');
+                            btn.onclick = () => carregarDetalhes(seas.id, `${animeTitle} - ${seas.name}`);
+                            seasonsList.appendChild(btn);
+                        });
+                    } else {
+                        seasonsSec.style.display = 'none';
+                    }
+                } catch (e) {
+                    document.getElementById('seasons-section').style.display = 'none';
                 }
 
                 let dados = await fetchApi(`/anime/${animeId}/episodes`);
