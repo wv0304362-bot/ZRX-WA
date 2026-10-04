@@ -5,15 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zeryx Streaming - Animes</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <!-- Ferramenta de consola no telemóvel para veres o que se passa -->
+    <!-- Consola de diagnóstico Eruda para telemóvel -->
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #0f0f0f; color: #fff; font-family: Arial, sans-serif; padding: 15px; }
-        header { text-align: center; margin-bottom: 25px; }
-        header h1 { color: #e50914; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; }
+        header { text-align: center; margin-bottom: 20px; }
+        header h1 { color: #e50914; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
         
+        /* Barra de Pesquisa */
+        .search-container { display: flex; gap: 8px; max-width: 500px; margin: 0 auto 20px auto; }
+        .search-input { flex: 1; background: #181818; border: 1px solid #333; color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 14px; outline: none; }
+        .search-input:focus { border-color: #e50914; }
+        .search-btn { background: #e50914; color: #fff; border: none; padding: 0 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .search-btn:hover { background: #b80710; }
+
         /* Grid de Animes */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
         .card { background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
@@ -36,11 +43,16 @@
 
     <header>
         <h1>Zeryx Animes</h1>
+        <!-- Nova Operação: Barra de Pesquisa -->
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar anime..." onkeypress="verificarEnter(event)">
+            <button class="search-btn" onclick="pesquisarAnime()">🔍</button>
+        </div>
     </header>
 
     <!-- Catálogo -->
     <div id="catalog-section">
-        <h2 style="font-size: 16px; margin-bottom: 12px; border-left: 4px solid #e50914; padding-left: 8px;">Animes em Destaque</h2>
+        <h2 id="section-title" style="font-size: 16px; margin-bottom: 12px; border-left: 4px solid #e50914; padding-left: 8px;">Animes em Destaque</h2>
         <div class="grid" id="anime-grid">
             <div class="loading">A carregar catálogo do servidor (o Render pode demorar até 40s a acordar)...</div>
         </div>
@@ -62,7 +74,7 @@
     <script>
         const BASE_URL = 'https://zrx-wa.onrender.com';
 
-        // Tenta várias rotas possíveis para evitar erros de 404 caso o prefixo varie
+        // Sistema inteligente de rotas para evitar 404
         async function fetchApi(endpoint) {
             const rotasPossiveis = [
                 `${BASE_URL}/api/v2/hianime${endpoint}`,
@@ -75,9 +87,7 @@
                     let res = await fetch(url);
                     if (res.ok) {
                         let json = await res.json();
-                        // Se a API retornar sucesso ou dados válidos, usa esta rota
                         if (json && (json.success !== false || json.data)) {
-                            console.log("Rota bem-sucedida:", url);
                             return json;
                         }
                     }
@@ -91,6 +101,7 @@
         async function carregarCatalogo() {
             try {
                 let dados = await fetchApi('/home');
+                document.getElementById('section-title').innerText = "Animes em Destaque";
                 
                 let grid = document.getElementById('anime-grid');
                 grid.innerHTML = '';
@@ -102,24 +113,65 @@
                     return;
                 }
 
-                listaAnimes.forEach(anime => {
-                    let card = document.createElement('div');
-                    card.className = 'card';
-                    card.onclick = () => carregarDetalhes(anime.id, anime.name);
-                    card.innerHTML = `
-                        <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
-                        <h3>${anime.name}</h3>
-                    `;
-                    grid.appendChild(card);
-                });
+                renderizarGrid(listaAnimes);
             } catch (erro) {
                 console.error("Erro ao carregar catálogo:", erro);
                 document.getElementById('anime-grid').innerHTML = `
                     <div class="loading" style="color: #e50914;">
                         Erro ao conectar com o Render.<br>
-                        <small style="color: #bbb;">Dica: Verifique a consola flutuante (Eruda) no canto do ecrã.</small>
+                        <small style="color: #bbb;">Verifique a consola flutuante (Eruda) para mais detalhes.</small>
                     </div>`;
             }
+        }
+
+        // Nova Operação: Função de Pesquisa
+        async function pesquisarAnime() {
+            let query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                carregarCatalogo();
+                return;
+            }
+
+            let grid = document.getElementById('anime-grid');
+            grid.innerHTML = '<div class="loading">A pesquisar animes...</div>';
+            document.getElementById('section-title').innerText = `Resultados para: "${query}"`;
+
+            try {
+                let dados = await fetchApi(`/search?q=${encodeURIComponent(query)}`);
+                let listaAnimes = dados.data?.animes || dados.animes || [];
+
+                if (listaAnimes.length === 0) {
+                    grid.innerHTML = '<div class="loading">Nenhum anime encontrado com esse nome.</div>';
+                    return;
+                }
+
+                renderizarGrid(listaAnimes);
+            } catch (erro) {
+                console.error("Erro na pesquisa:", erro);
+                grid.innerHTML = '<div class="loading" style="color: #e50914;">Erro ao realizar a pesquisa.</div>';
+            }
+        }
+
+        function verificarEnter(event) {
+            if (event.key === 'Enter') {
+                pesquisarAnime();
+            }
+        }
+
+        function renderizarGrid(listaAnimes) {
+            let grid = document.getElementById('anime-grid');
+            grid.innerHTML = '';
+
+            listaAnimes.forEach(anime => {
+                let card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => carregarDetalhes(anime.id, anime.name);
+                card.innerHTML = `
+                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
+                    <h3>${anime.name}</h3>
+                `;
+                grid.appendChild(card);
+            });
         }
 
         async function carregarDetalhes(animeId, animeTitle) {
