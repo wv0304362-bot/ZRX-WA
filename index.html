@@ -118,42 +118,30 @@
     </div>
 
     <script>
+        // Mantém o link exato do teu servidor no Render
         const BASE_URL = 'https://zrx-wa.onrender.com';
 
-        // Varredura inteligente por rotas comuns da hianime-api para evitar 404
+        // Comunicação direta com a versão v2 da hianime-api que o servidor entende
         async function fetchApi(endpoint) {
-            const rotasPossiveis = [
-                `${BASE_URL}/api/v2/hianime${endpoint}`,
-                `${BASE_URL}/api/v1/hianime${endpoint}`,
-                `${BASE_URL}/hianime${endpoint}`,
-                `${BASE_URL}${endpoint}`
-            ];
-
-            for (let url of rotasPossiveis) {
-                try {
-                    let res = await fetch(url);
-                    if (res.ok) {
-                        let json = await res.json();
-                        if (json && (json.success !== false || json.data || json.spotlightAnimes)) {
-                            console.log("Sucesso na rota:", url);
-                            return json;
-                        }
-                    }
-                } catch (e) {
-                    console.warn("Falha ao tentar:", url);
-                }
+            let url = `${BASE_URL}/api/v2/hianime${endpoint}`;
+            try {
+                let res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                let json = await res.json();
+                return json;
+            } catch (e) {
+                console.error("Erro no fetch para:", url, e);
+                throw e;
             }
-            throw new Error(`Endpoint ${endpoint} indisponível no servidor.`);
         }
 
         async function carregarCatalogo() {
             try {
                 let dados = await fetchApi('/home');
                 
-                // Extrai dados independentemente da versão do JSON da API
-                let spotlight = dados.data?.spotlightAnimes || dados.spotlightAnimes || [];
-                let trending = dados.data?.trendingAnimes || dados.trendingAnimes || [];
-                let latest = dados.data?.latestEpisodeAnimes || dados.latestEpisodeAnimes || [];
+                let spotlight = dados.data?.spotlightAnimes || [];
+                let trending = dados.data?.trendingAnimes || [];
+                let latest = dados.data?.latestEpisodeAnimes || [];
 
                 // 1. Top 3 em Destaque no topo
                 let top3Grid = document.getElementById('top3-grid');
@@ -196,8 +184,8 @@
                 console.error("Erro ao carregar catálogo:", erro);
                 document.getElementById('catalog-section').innerHTML = `
                     <div class="loading" style="color: #e50914;">
-                        Erro ao conectar com o Render ou rotas 404.<br>
-                        <small style="color: #bbb;">Dica: Certifique-se de que o UptimeRobot está a pings o link correto e que o servidor acordou.</small>
+                        Erro ao conectar com o Render.<br>
+                        <small style="color: #bbb;">Dica: Aguarde alguns segundos para o servidor acordar da hibernação gratuita.</small>
                     </div>`;
             }
         }
@@ -231,7 +219,7 @@
 
             try {
                 let dados = await fetchApi(`/search?q=${encodeURIComponent(query)}`);
-                let listaAnimes = dados.data?.animes || dados.animes || [];
+                let listaAnimes = dados.data?.animes || [];
 
                 searchGrid.innerHTML = '';
                 if (listaAnimes.length === 0) {
@@ -267,7 +255,7 @@
                 // Tenta carregar informações de temporadas
                 try {
                     let infoDados = await fetchApi(`/anime/${animeId}`);
-                    let secoesTemporadas = infoDados.data?.seasons || infoDados.seasons || [];
+                    let secoesTemporadas = infoDados.data?.seasons || [];
                     
                     let seasonsSec = document.getElementById('seasons-section');
                     let seasonsList = document.getElementById('seasons-list');
@@ -292,7 +280,7 @@
 
                 let dados = await fetchApi(`/anime/${animeId}/episodes`);
                 epList.innerHTML = '';
-                let episodios = dados.data?.episodes || dados.episodes || [];
+                let episodios = dados.data?.episodes || [];
 
                 if (episodios.length === 0) {
                     epList.innerHTML = '<div style="color: #e50914;">Nenhum episódio encontrado.</div>';
@@ -323,7 +311,7 @@
 
             try {
                 let dados = await fetchApi(`/episode/sources?animeEpisodeId=${episodeId}`);
-                let sources = dados.data?.sources || dados.sources || [];
+                let sources = dados.data?.sources || [];
                 let videoUrl = sources.find(s => s.type === 'hls')?.url || sources[0]?.url;
 
                 if (!videoUrl) {
