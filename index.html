@@ -74,21 +74,15 @@
         
         <!-- Top 3 Animes em Destaque -->
         <h2 class="section-title">🏆 Top 3 em Destaque</h2>
-        <div class="top3-container" id="top3-grid">
-            <div class="loading">A carregar Top 3... (O Render pode demorar até 40s a acordar)</div>
-        </div>
+        <div class="top3-container" id="top3-grid"></div>
 
         <!-- Categoria: Ação (Arrastar para o lado) -->
         <h2 class="section-title">⚔️ Animes de Ação</h2>
-        <div class="horizontal-scroll" id="action-grid">
-            <div class="loading">A carregar ação...</div>
-        </div>
+        <div class="horizontal-scroll" id="action-grid"></div>
 
         <!-- Categoria: Romance (Arrastar para o lado) -->
         <h2 class="section-title">💖 Animes de Romance</h2>
-        <div class="horizontal-scroll" id="romance-grid">
-            <div class="loading">A carregar romance...</div>
-        </div>
+        <div class="horizontal-scroll" id="romance-grid"></div>
 
     </div>
 
@@ -120,98 +114,57 @@
     <script>
         const BASE_URL = 'https://zrx-wa.onrender.com';
 
-        // Varredura inteligente de rotas para descobrir automaticamente o caminho correto do servidor
-        async function fetchApi(endpoint) {
-            const rotasPossiveis = [
-                `${BASE_URL}/api/v2/hianime${endpoint}`,
-                `${BASE_URL}/api/v1/hianime${endpoint}`,
-                `${BASE_URL}/hianime${endpoint}`,
-                `${BASE_URL}${endpoint}`
-            ];
+        // Base de dados local com fotos e nomes dos animes para garantir funcionamento instantâneo
+        const catalogoAnimes = {
+            top3: [
+                { id: "one-piece-100", name: "One Piece", poster: "https://cdn.myanimelist.net/images/anime/1244/137368.jpg" },
+                { id: "jujutsu-kaisen-531", name: "Jujutsu Kaisen", poster: "https://cdn.myanimelist.net/images/anime/1179/133860.jpg" },
+                { id: "attack-on-titan-80", name: "Attack on Titan", poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg" }
+            ],
+            acao: [
+                { id: "one-piece-100", name: "One Piece", poster: "https://cdn.myanimelist.net/images/anime/1244/137368.jpg" },
+                { id: "jujutsu-kaisen-531", name: "Jujutsu Kaisen", poster: "https://cdn.myanimelist.net/images/anime/1179/133860.jpg" },
+                { id: "attack-on-titan-80", name: "Attack on Titan", poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg" },
+                { id: "demon-slayer-560", name: "Demon Slayer", poster: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg" },
+                { id: "chainsaw-man-446", name: "Chainsaw Man", poster: "https://cdn.myanimelist.net/images/anime/1806/126216.jpg" }
+            ],
+            romance: [
+                { id: "horimiya-489", name: "Horimiya", poster: "https://cdn.myanimelist.net/images/anime/1355/115115.jpg" },
+                { id: "kaguya-sama-379", name: "Kaguya-sama: Love is War", poster: "https://cdn.myanimelist.net/images/anime/1295/106558.jpg" },
+                { id: "my-dress-up-darling-495", name: "My Dress-Up Darling", poster: "https://cdn.myanimelist.net/images/anime/1278/120286.jpg" },
+                { id: "toradora-42", name: "Toradora!", poster: "https://cdn.myanimelist.net/images/anime/13/22122.jpg" }
+            ]
+        };
 
-            for (let url of rotasPossiveis) {
-                try {
-                    let res = await fetch(url);
-                    if (res.ok) {
-                        let json = await res.json();
-                        if (json && (json.success !== false || json.data || json.spotlightAnimes)) {
-                            console.log("Rota bem-sucedida:", url);
-                            return json;
-                        }
-                    }
-                } catch (e) {
-                    // Ignora e tenta a próxima rota
-                }
-            }
+        function carregarCatalogoLocal() {
+            // 1. Renderiza Top 3
+            let top3Grid = document.getElementById('top3-grid');
+            top3Grid.innerHTML = '';
+            catalogoAnimes.top3.forEach((anime, index) => {
+                let card = document.createElement('div');
+                card.className = 'top3-card';
+                card.onclick = () => carregarDetalhes(anime.id, anime.name);
+                card.innerHTML = `
+                    <div class="top3-badge">Top ${index + 1}</div>
+                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
+                    <h3>${anime.name}</h3>
+                `;
+                top3Grid.appendChild(card);
+            });
 
-            // Se o direto falhar por CORS, tenta via proxy rápido
-            for (let url of rotasPossiveis) {
-                try {
-                    let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                    let resProxy = await fetch(proxyUrl);
-                    if (resProxy.ok) {
-                        let dataProxy = await resProxy.json();
-                        let json = JSON.parse(dataProxy.contents);
-                        if (json && (json.success !== false || json.data || json.spotlightAnimes)) {
-                            return json;
-                        }
-                    }
-                } catch (e) {}
-            }
+            // 2. Renderiza Ação
+            let actionGrid = document.getElementById('action-grid');
+            actionGrid.innerHTML = '';
+            catalogoAnimes.acao.forEach(anime => {
+                actionGrid.appendChild(criarCardHorizontal(anime));
+            });
 
-            throw new Error(`Não foi possível comunicar com nenhuma rota para o endpoint: ${endpoint}`);
-        }
-
-        async function carregarCatalogo() {
-            try {
-                let dados = await fetchApi('/home');
-                
-                let spotlight = dados.data?.spotlightAnimes || dados.spotlightAnimes || [];
-                let trending = dados.data?.trendingAnimes || dados.trendingAnimes || [];
-                let latest = dados.data?.latestEpisodeAnimes || dados.latestEpisodeAnimes || [];
-
-                let top3Grid = document.getElementById('top3-grid');
-                top3Grid.innerHTML = '';
-                
-                if (spotlight.length === 0) {
-                    top3Grid.innerHTML = '<div class="loading">Nenhum destaque encontrado.</div>';
-                    return;
-                }
-
-                spotlight.slice(0, 3).forEach((anime, index) => {
-                    let card = document.createElement('div');
-                    card.className = 'top3-card';
-                    card.onclick = () => carregarDetalhes(anime.id, anime.name);
-                    card.innerHTML = `
-                        <div class="top3-badge">Top ${index + 1}</div>
-                        <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
-                        <h3>${anime.name}</h3>
-                    `;
-                    top3Grid.appendChild(card);
-                });
-
-                let actionGrid = document.getElementById('action-grid');
-                actionGrid.innerHTML = '';
-                let listaAcao = trending.length > 0 ? trending : spotlight;
-                listaAcao.forEach(anime => {
-                    actionGrid.appendChild(criarCardHorizontal(anime));
-                });
-
-                let romanceGrid = document.getElementById('romance-grid');
-                romanceGrid.innerHTML = '';
-                let listaRomance = latest.length > 0 ? latest : spotlight.slice().reverse();
-                listaRomance.forEach(anime => {
-                    romanceGrid.appendChild(criarCardHorizontal(anime));
-                });
-
-            } catch (erro) {
-                console.error("Erro ao carregar catálogo:", erro);
-                document.getElementById('catalog-section').innerHTML = `
-                    <div class="loading" style="color: #e50914;">
-                        Erro ao conectar com o Render.<br>
-                        <small style="color: #bbb;">Dica: Aguarde alguns segundos para o servidor acordar da hibernação gratuita.</small>
-                    </div>`;
-            }
+            // 3. Renderiza Romance
+            let romanceGrid = document.getElementById('romance-grid');
+            romanceGrid.innerHTML = '';
+            catalogoAnimes.romance.forEach(anime => {
+                romanceGrid.appendChild(criarCardHorizontal(anime));
+            });
         }
 
         function criarCardHorizontal(anime) {
@@ -226,7 +179,7 @@
         }
 
         async function pesquisarAnime() {
-            let query = document.getElementById('searchInput').value.trim();
+            let query = document.getElementById('searchInput').value.trim().toLowerCase();
             if (!query) {
                 document.getElementById('search-results-section').style.display = 'none';
                 document.getElementById('catalog-section').style.display = 'block';
@@ -241,23 +194,19 @@
             searchGrid.innerHTML = '<div class="loading">A pesquisar animes...</div>';
             document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
 
-            try {
-                let dados = await fetchApi(`/search?q=${encodeURIComponent(query)}`);
-                let listaAnimes = dados.data?.animes || dados.animes || [];
+            // Junta todos os animes da lista local para pesquisar
+            let todos = [...catalogoAnimes.top3, ...catalogoAnimes.acao, ...catalogoAnimes.romance];
+            let filtrados = todos.filter(a => a.name.toLowerCase().includes(query));
 
-                searchGrid.innerHTML = '';
-                if (listaAnimes.length === 0) {
-                    searchGrid.innerHTML = '<div class="loading">Nenhum anime encontrado com esse nome.</div>';
-                    return;
-                }
-
-                listaAnimes.forEach(anime => {
-                    searchGrid.appendChild(criarCardHorizontal(anime));
-                });
-            } catch (erro) {
-                console.error("Erro na pesquisa:", erro);
-                searchGrid.innerHTML = '<div class="loading" style="color: #e50914;">Erro ao realizar a pesquisa.</div>';
+            searchGrid.innerHTML = '';
+            if (filtrados.length === 0) {
+                searchGrid.innerHTML = '<div class="loading">Nenhum anime encontrado com esse nome.</div>';
+                return;
             }
+
+            filtrados.forEach(anime => {
+                searchGrid.appendChild(criarCardHorizontal(anime));
+            });
         }
 
         function verificarEnter(event) {
@@ -273,40 +222,17 @@
             document.getElementById('anime-title').innerText = animeTitle;
             
             let epList = document.getElementById('episodes-list');
-            epList.innerHTML = '<div style="color: #aaa;">A carregar episódios e temporadas...</div>';
+            epList.innerHTML = '<div style="color: #aaa;">A carregar episódios do servidor Render...</div>';
 
             try {
-                try {
-                    let infoDados = await fetchApi(`/anime/${animeId}`);
-                    let secoesTemporadas = infoDados.data?.seasons || infoDados.seasons || [];
-                    
-                    let seasonsSec = document.getElementById('seasons-section');
-                    let seasonsList = document.getElementById('seasons-list');
-                    seasonsList.innerHTML = '';
+                // Tenta ligar ao Render para buscar os episódios reais via API
+                let res = await fetch(`${BASE_URL}/api/v2/hianime/anime/${animeId}/episodes`);
+                let dados = await res.json();
+                let episodios = dados.data?.episodes || [];
 
-                    if (secoesTemporadas.length > 1) {
-                        seasonsSec.style.display = 'block';
-                        secoesTemporadas.forEach(seas => {
-                            let btn = document.createElement('button');
-                            btn.className = 'season-btn';
-                            btn.innerText = seas.name || `Temporada`;
-                            if(seas.id === animeId) btn.classList.add('active');
-                            btn.onclick = () => carregarDetalhes(seas.id, `${animeTitle} - ${seas.name}`);
-                            seasonsList.appendChild(btn);
-                        });
-                    } else {
-                        seasonsSec.style.display = 'none';
-                    }
-                } catch (e) {
-                    document.getElementById('seasons-section').style.display = 'none';
-                }
-
-                let dados = await fetchApi(`/anime/${animeId}/episodes`);
                 epList.innerHTML = '';
-                let episodios = dados.data?.episodes || dados.episodes || [];
-
                 if (episodios.length === 0) {
-                    epList.innerHTML = '<div style="color: #e50914;">Nenhum episódio encontrado.</div>';
+                    epList.innerHTML = '<div style="color: #e50914;">Nenhum episódio encontrado na API.</div>';
                     return;
                 }
 
@@ -323,8 +249,8 @@
                     assistirEpisodio(episodios[0].episodeId, document.getElementById(`ep-${episodios[0].episodeId}`));
                 }
             } catch (erro) {
-                console.error("Erro ao carregar detalhes:", erro);
-                epList.innerHTML = '<div style="color: #e50914;">Erro ao carregar os episódios.</div>';
+                console.error("Erro ao carregar episódios:", erro);
+                epList.innerHTML = '<div style="color: #e50914;">Erro ao conectar com o Render para carregar os episódios.</div>';
             }
         }
 
@@ -333,8 +259,9 @@
             if(btnElement) btnElement.classList.add('active');
 
             try {
-                let dados = await fetchApi(`/episode/sources?animeEpisodeId=${episodeId}`);
-                let sources = dados.data?.sources || dados.sources || [];
+                let res = await fetch(`${BASE_URL}/api/v2/hianime/episode/sources?animeEpisodeId=${episodeId}`);
+                let dados = await res.json();
+                let sources = dados.data?.sources || [];
                 let videoUrl = sources.find(s => s.type === 'hls')?.url || sources[0]?.url;
 
                 if (!videoUrl) {
@@ -352,7 +279,6 @@
                     video.src = videoUrl;
                 }
             } catch (erro) {
-                console.error("Erro ao carregar o vídeo:", erro);
                 alert("Erro ao carregar a fonte de vídeo.");
             }
         }
@@ -370,7 +296,8 @@
             video.src = "";
         }
 
-        carregarCatalogo();
+        // Inicializa o catálogo imediatamente
+        carregarCatalogoLocal();
     </script>
 </body>
 </html>
