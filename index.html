@@ -110,78 +110,97 @@
     </div>
 
     <script>
-        // Base de dados estruturada com IDs exatos do HiAnime, imagens reais sem bloqueios e temporadas organizadas
-        const spotlightList = [
-            { 
-                id: "one-piece-100", 
-                name: "One Piece", 
-                poster: "https://img.flawlessfiles.com/_r/100x200/100/28/b7/28b7327815ac4796649ec3d5b4a50d24/28b7327815ac4796649ec3d5b4a50d24.jpg", 
-                seasons: ["Saga East Blue", "Saga Alabasta", "Saga Skypiea", "Saga Enies Lobby", "Saga Marineford", "Wano Country"] 
+        // Base de dados estruturada com imagens limpas e streams específicos mapeados por IDs
+        const animeDatabase = {
+            "one-piece-100": {
+                name: "One Piece",
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1244/137368.jpg",
+                seasons: ["Saga East Blue", "Saga Alabasta", "Saga Skypiea", "Saga Enies Lobby", "Saga Marineford", "Wano Country"],
+                streams: {
+                    "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+                    "2": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8"
+                }
             },
-            { 
-                id: "jujutsu-kaisen-531", 
-                name: "Jujutsu Kaisen", 
-                poster: "https://img.flawlessfiles.com/_r/100x200/100/11/a6/11a684b3e64b4131b79f90f23023b123/11a684b3e64b4131b79f90f23023b123.jpg", 
-                seasons: ["Temporada 1", "Temporada 2 (Shibuya Incident)"] 
+            "jujutsu-kaisen-531": {
+                name: "Jujutsu Kaisen",
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1179/133860.jpg",
+                seasons: ["Temporada 1", "Temporada 2 (Shibuya Incident)"],
+                streams: {
+                    "1": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
+                    "2": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                }
             },
-            { 
-                id: "naruto-20", 
-                name: "Naruto", 
-                poster: "https://img.flawlessfiles.com/_r/100x200/100/26/92/269223e75e3c7908b8b0e8ff3db6d400/269223e75e3c7908b8b0e8ff3db6d400.jpg", 
-                seasons: ["Naruto Clássico", "Naruto Shippuden"] 
+            "naruto-20": {
+                name: "Naruto",
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/13/17405.jpg",
+                seasons: ["Naruto Clássico", "Naruto Shippuden"],
+                streams: {
+                    "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                }
+            },
+            "attack-on-titan-112": {
+                name: "Attack on Titan",
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/10/47347.jpg",
+                seasons: ["Temporada 1", "Temporada 2", "Temporada 3", "The Final Season"],
+                streams: {
+                    "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                }
+            },
+            "demon-slayer-47": {
+                name: "Demon Slayer",
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1286/99889.jpg",
+                seasons: ["Tanjiro Kamado Arc", "Trem Infinito", "Distrito do Entretenimento", "Vila dos Ferreiros"],
+                streams: {
+                    "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                }
+            },
+            "solo-leveling-18718": {
+                name: "Solo Leveling",
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1075/141416.jpg",
+                seasons: ["Temporada 1"],
+                streams: {
+                    "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                }
+            },
+            "dragon-ball-z-211": {
+                name: "Dragon Ball Z",
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1930/135249.jpg",
+                seasons: ["Saga Saiyajin", "Saga Freeza", "Saga Cell", "Saga Majin Boo"],
+                streams: {
+                    "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                }
+            },
+            "bleach-93": {
+                name: "Bleach",
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/3/40451.jpg",
+                seasons: ["Soul Society", "Arco Arrancar", "Guerra Sangrenta dos Mil Anos"],
+                streams: {
+                    "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                }
+            },
+            "chainsaw-man-17406": {
+                name: "Chainsaw Man",
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1806/126216.jpg",
+                seasons: ["Temporada 1 (Public Safety Arc)"],
+                streams: {
+                    "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+                }
             }
-        ];
+        };
 
-        const actionList = [
-            { 
-                id: "attack-on-titan-112", 
-                name: "Attack on Titan", 
-                poster: "https://img.flawlessfiles.com/_r/100x200/100/30/f0/30f0653f5ffbfab7b14d5e7d589d97fa/30f0653f5ffbfab7b14d5e7d589d97fa.jpg", 
-                seasons: ["Temporada 1", "Temporada 2", "Temporada 3", "The Final Season"] 
-            },
-            { 
-                id: "demon-slayer-47", 
-                name: "Demon Slayer", 
-                poster: "https://img.flawlessfiles.com/_r/100x200/100/18/bf/18bf14f045c2ebf928e4e69b5635f119/18bf14f045c2ebf928e4e69b5635f119.jpg", 
-                seasons: ["Demon Slayer (Tanjiro Kamado Arc)", "Arco do Trem Infinito", "Distrito do Entretenimento", "Vila dos Ferreiros"] 
-            },
-            { 
-                id: "solo-leveling-18718", 
-                name: "Solo Leveling", 
-                poster: "https://img.flawlessfiles.com/_r/100x200/100/df/3f/df3f090d8a7c2f6d2f3c0b13cf17d3d1/df3f090d8a7c2f6d2f3c0b13cf17d3d1.jpg", 
-                seasons: ["Temporada 1"] 
-            }
-        ];
-
-        const popularList = [
-            { 
-                id: "dragon-ball-z-211", 
-                name: "Dragon Ball Z", 
-                poster: "https://img.flawlessfiles.com/_r/100x200/100/cb/6a/cb6a40a83e0c03426e25ca4f923dcbe4/cb6a40a83e0c03426e25ca4f923dcbe4.jpg", 
-                seasons: ["Saga Saiyajin", "Saga Freeza", "Saga Cell", "Saga Majin Boo"] 
-            },
-            { 
-                id: "bleach-93", 
-                name: "Bleach", 
-                poster: "https://img.flawlessfiles.com/_r/100x200/100/6f/52/6f52e379b1836171b3e401df5e8c257d/6f52e379b1836171b3e401df5e8c257d.jpg", 
-                seasons: ["Soul Society", "Arco Arrancar", "Guerra Sangrenta dos Mil Anos"] 
-            },
-            { 
-                id: "chainsaw-man-17406", 
-                name: "Chainsaw Man", 
-                poster: "https://img.flawlessfiles.com/_r/100x200/100/98/f5/98f56ef45ef8df4c32aa3632906d2c4b/98f56ef45ef8df4c32aa3632906d2c4b.jpg", 
-                seasons: ["Temporada 1 (Public Safety Arc)"] 
-            }
-        ];
+        const spotlightKeys = ["one-piece-100", "jujutsu-kaisen-531", "naruto-20"];
+        const actionKeys = ["attack-on-titan-112", "demon-slayer-47", "solo-leveling-18718"];
+        const popularKeys = ["dragon-ball-z-211", "bleach-93", "chainsaw-man-17406"];
 
         function carregarCatalogo() {
             // 1. Top 3 Destaque
             let top3Grid = document.getElementById('top3-grid');
             top3Grid.innerHTML = '';
-            spotlightList.slice(0, 3).forEach((anime, index) => {
+            spotlightKeys.forEach((key, index) => {
+                let anime = animeDatabase[key];
                 let card = document.createElement('div');
                 card.className = 'top3-card';
-                card.onclick = () => abrirAnime(anime);
+                card.onclick = () => abrirAnime(key);
                 card.innerHTML = `
                     <div class="top3-badge">Top ${index + 1}</div>
                     <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
@@ -193,22 +212,23 @@
             // 2. Animes de Ação
             let actionGrid = document.getElementById('action-grid');
             actionGrid.innerHTML = '';
-            actionList.forEach(anime => {
-                actionGrid.appendChild(criarCardHorizontal(anime));
+            actionKeys.forEach(key => {
+                actionGrid.appendChild(criarCardHorizontal(key));
             });
 
             // 3. Animes Populares
             let romanceGrid = document.getElementById('romance-grid');
             romanceGrid.innerHTML = '';
-            popularList.forEach(anime => {
-                romanceGrid.appendChild(criarCardHorizontal(anime));
+            popularKeys.forEach(key => {
+                romanceGrid.appendChild(criarCardHorizontal(key));
             });
         }
 
-        function criarCardHorizontal(anime) {
+        function criarCardHorizontal(key) {
+            let anime = animeDatabase[key];
             let card = document.createElement('div');
             card.className = 'card';
-            card.onclick = () => abrirAnime(anime);
+            card.onclick = () => abrirAnime(key);
             card.innerHTML = `
                 <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
                 <h3>${anime.name}</h3>
@@ -216,13 +236,18 @@
             return card;
         }
 
-        function abrirAnime(anime) {
+        let animeAtualId = null;
+
+        function abrirAnime(key) {
+            animeAtualId = key;
+            let anime = animeDatabase[key];
+
             document.getElementById('catalog-section').style.display = 'none';
             document.getElementById('search-results-section').style.display = 'none';
             document.getElementById('watch-section').style.display = 'block';
             document.getElementById('anime-title').innerText = anime.name;
 
-            // Renderizar Temporadas Reais
+            // Renderizar Temporadas
             let seasonsList = document.getElementById('seasons-list');
             seasonsList.innerHTML = '';
             anime.seasons.forEach((season, idx) => {
@@ -247,18 +272,20 @@
                 btn.onclick = () => {
                     document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    reproduzirVideoExemplo();
+                    reproduzirEpisodio(i);
                 };
                 epList.appendChild(btn);
             }
 
-            reproduzirVideoExemplo();
+            reproduzirEpisodio(1);
         }
 
-        function reproduzirVideoExemplo() {
+        function reproduzirEpisodio(epNum) {
+            let anime = animeDatabase[animeAtualId];
             let video = document.getElementById('videoPlayer');
-            // Stream HLS de teste seguro e funcional para o player
-            let videoUrl = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
+            
+            // Seleciona a fonte específica do anime ou usa uma alternativa se mapeada
+            let videoUrl = anime.streams[epNum] || anime.streams["1"] || "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
 
             if (Hls.isSupported()) {
                 let hls = new Hls();
@@ -285,16 +312,16 @@
             searchGrid.innerHTML = '';
             document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
 
-            let todos = [...spotlightList, ...actionList, ...popularList];
-            let filtrados = todos.filter(a => a.name.toLowerCase().includes(query));
+            let chaves = Object.keys(animeDatabase);
+            let filtrados = chaves.filter(k => animeDatabase[k].name.toLowerCase().includes(query));
 
             if (filtrados.length === 0) {
                 searchGrid.innerHTML = '<div class="loading">Nenhum anime encontrado.</div>';
                 return;
             }
 
-            filtrados.forEach(anime => {
-                searchGrid.appendChild(criarCardHorizontal(anime));
+            filtrados.forEach(key => {
+                searchGrid.appendChild(criarCardHorizontal(key));
             });
         }
 
