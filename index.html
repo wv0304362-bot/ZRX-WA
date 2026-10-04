@@ -110,108 +110,94 @@
     </div>
 
     <script>
-        // Base de dados local com IDs exatos, capas oficiais diretas (sem bloqueio de CORS) e temporadas reais mapeadas
+        // Função auxiliar para passar imagens por proxy seguro contra bloqueios de CORS/Hotlinking
+        function imgProxy(url) {
+            return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
+        }
+
         const catalogoAnimes = {
             "one-piece-100": {
                 name: "One Piece",
-                poster: "https://cdn.myanimelist.net/images/anime/1244/137368.jpg",
-                categoria: "destaque",
+                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1244/137368.jpg"),
                 seasons: [
-                    { name: "Saga East Blue", id: "one-piece-100" },
-                    { name: "Saga Alabasta", id: "one-piece-101" },
-                    { name: "Saga Skypiea", id: "one-piece-102" },
-                    { name: "Saga Marineford", id: "one-piece-103" }
-                ],
-                streams: { "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Saga East Blue", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                    { name: "Saga Alabasta", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
+                    { name: "Saga Skypiea", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                    { name: "Saga Marineford", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                ]
             },
             "jujutsu-kaisen-531": {
                 name: "Jujutsu Kaisen",
-                poster: "https://cdn.myanimelist.net/images/anime/1179/133860.jpg",
-                categoria: "destaque",
+                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1179/133860.jpg"),
                 seasons: [
-                    { name: "Temporada 1", id: "jujutsu-kaisen-531" },
-                    { name: "Temporada 2 (Shibuya Incident)", id: "jujutsu-kaisen-15335" }
-                ],
-                streams: { "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Temporada 1", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
+                    { name: "Temporada 2 (Shibuya)", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                ]
             },
             "naruto-20": {
                 name: "Naruto",
-                poster: "https://cdn.myanimelist.net/images/anime/13/17405.jpg",
-                categoria: "destaque",
+                poster: imgProxy("https://cdn.myanimelist.net/images/anime/13/17405.jpg"),
                 seasons: [
-                    { name: "Naruto Clássico", id: "naruto-20" },
-                    { name: "Naruto Shippuden", id: "naruto-shippuden-1735" }
-                ],
-                streams: { "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Naruto Clássico", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                    { name: "Naruto Shippuden", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                ]
             },
             "attack-on-titan-112": {
                 name: "Attack on Titan",
-                poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg",
-                categoria: "acao",
+                poster: imgProxy("https://cdn.myanimelist.net/images/anime/10/47347.jpg"),
                 seasons: [
-                    { name: "Temporada 1", id: "attack-on-titan-112" },
-                    { name: "Temporada 2", id: "attack-on-titan-season-2-353" },
-                    { name: "Temporada 3", id: "attack-on-titan-season-3-875" },
-                    { name: "The Final Season", id: "attack-on-titan-the-final-season-13593" }
-                ],
-                streams: { "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                    { name: "Temporada 2", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
+                    { name: "Temporada 3", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                    { name: "The Final Season", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                ]
             },
             "demon-slayer-47": {
                 name: "Demon Slayer",
-                poster: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg",
-                categoria: "acao",
+                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1286/99889.jpg"),
                 seasons: [
-                    { name: "Tanjiro Kamado Arc", id: "demon-slayer-47" },
-                    { name: "Arco do Trem Infinito", id: "demon-slayer-kimetsu-no-yaiba-mugen-train-arc-16987" },
-                    { name: "Distrito do Entretenimento", id: "demon-slayer-kimetsu-no-yaiba-entertainment-district-arc-17329" }
-                ],
-                streams: { "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Tanjiro Kamado Arc", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                    { name: "Arco do Trem Infinito", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
+                    { name: "Distrito do Entretenimento", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                ]
             },
             "solo-leveling-18718": {
                 name: "Solo Leveling",
-                poster: "https://cdn.myanimelist.net/images/anime/1075/141416.jpg",
-                categoria: "acao",
+                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1075/141416.jpg"),
                 seasons: [
-                    { name: "Temporada 1", id: "solo-leveling-18718" }
-                ],
-                streams: { "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                ]
             },
             "dragon-ball-z-211": {
                 name: "Dragon Ball Z",
-                poster: "https://cdn.myanimelist.net/images/anime/1930/135249.jpg",
-                categoria: "popular",
+                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1930/135249.jpg"),
                 seasons: [
-                    { name: "Dragon Ball Z", id: "dragon-ball-z-211" }
-                ],
-                streams: { "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Saga Saiyajin / Freeza", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                    { name: "Saga Cell / Majin Boo", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                ]
             },
             "bleach-93": {
                 name: "Bleach",
-                poster: "https://cdn.myanimelist.net/images/anime/3/40451.jpg",
-                categoria: "popular",
+                poster: imgProxy("https://cdn.myanimelist.net/images/anime/3/40451.jpg"),
                 seasons: [
-                    { name: "Bleach", id: "bleach-93" },
-                    { name: "Guerra Sangrenta dos Mil Anos", id: "bleach-sennen-kessen-hen-17790" }
-                ],
-                streams: { "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Soul Society / Arrancar", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                    { name: "Guerra Sangrenta dos Mil Anos", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                ]
             },
             "chainsaw-man-17406": {
                 name: "Chainsaw Man",
-                poster: "https://cdn.myanimelist.net/images/anime/1806/126216.jpg",
-                categoria: "popular",
+                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1806/126216.jpg"),
                 seasons: [
-                    { name: "Temporada 1", id: "chainsaw-man-17406" }
-                ],
-                streams: { "1": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                ]
             }
         };
 
-        function carregarCatalogo() {
-            let top3Keys = ["one-piece-100", "jujutsu-kaisen-531", "naruto-20"];
-            let actionKeys = ["attack-on-titan-112", "demon-slayer-47", "solo-leveling-18718"];
-            let popularKeys = ["dragon-ball-z-211", "bleach-93", "chainsaw-man-17406"];
+        const top3Keys = ["one-piece-100", "jujutsu-kaisen-531", "naruto-20"];
+        const actionKeys = ["attack-on-titan-112", "demon-slayer-47", "solo-leveling-18718"];
+        const popularKeys = ["dragon-ball-z-211", "bleach-93", "chainsaw-man-17406"];
 
-            // 1. Destaques
+        function carregarCatalogo() {
             let top3Grid = document.getElementById('top3-grid');
             top3Grid.innerHTML = '';
             top3Keys.forEach((key, index) => {
@@ -227,14 +213,12 @@
                 top3Grid.appendChild(card);
             });
 
-            // 2. Ação
             let actionGrid = document.getElementById('action-grid');
             actionGrid.innerHTML = '';
             actionKeys.forEach(key => {
                 actionGrid.appendChild(criarCardHorizontal(key));
             });
 
-            // 3. Populares
             let romanceGrid = document.getElementById('romance-grid');
             romanceGrid.innerHTML = '';
             popularKeys.forEach(key => {
@@ -255,9 +239,11 @@
         }
 
         let animeAtualKey = null;
+        let temporadaAtualIndex = 0;
 
         function abrirAnime(key) {
             animeAtualKey = key;
+            temporadaAtualIndex = 0;
             let anime = catalogoAnimes[key];
 
             document.getElementById('catalog-section').style.display = 'none';
@@ -275,6 +261,8 @@
                 btn.onclick = () => {
                     document.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
+                    temporadaAtualIndex = idx;
+                    reproduzirTemporadaEpisodio(1);
                 };
                 seasonsList.appendChild(btn);
             });
@@ -290,18 +278,19 @@
                 btn.onclick = () => {
                     document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    reproduzirEpisodio(i);
+                    reproduzirTemporadaEpisodio(i);
                 };
                 epList.appendChild(btn);
             }
 
-            reproduzirEpisodio(1);
+            reproduzirTemporadaEpisodio(1);
         }
 
-        function reproduzirEpisodio(epNum) {
+        function reproduzirTemporadaEpisodio(epNum) {
             let anime = catalogoAnimes[animeAtualKey];
+            let temporada = anime.seasons[temporadaAtualIndex] || anime.seasons[0];
             let video = document.getElementById('videoPlayer');
-            let videoUrl = anime.streams[epNum] || anime.streams["1"] || "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
+            let videoUrl = temporada.stream;
 
             if (Hls.isSupported()) {
                 let hls = new Hls();
