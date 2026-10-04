@@ -4,28 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zeryx Streaming - Animes</title>
-    <!-- Importando HLS.js para reproduzir os streams de vídeo de anime -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background-color: #0f0f0f; color: #fff; font-family: Arial, sans-serif; padding: 15px; }
         header { text-align: center; margin-bottom: 25px; }
-        header h1 { color: #e50914; font-size: 24px; }
+        header h1 { color: #e50914; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; }
         
         /* Grid de Animes */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-        .card { background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
-        .card:hover { transform: scale(1.03); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+        .card { background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .card:hover { transform: scale(1.04); box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3); }
         .card img { width: 100%; height: 190px; object-fit: cover; }
-        .card h3 { font-size: 13px; padding: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card h3 { font-size: 13px; padding: 10px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Tela do Player e Episódios (Oculta inicialmente) */
+        /* Tela do Player e Episódios */
         #watch-section { display: none; margin-top: 20px; }
-        video { width: 100%; max-height: 450px; background: #000; border-radius: 8px; }
-        .episodes-container { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-top: 15px; }
-        .ep-btn { background: #222; color: #fff; border: 1px solid #444; padding: 8px 14px; border-radius: 5px; cursor: pointer; white-space: nowrap; }
-        .ep-btn:hover { background: #e50914; border-color: #e50914; }
-        .back-btn { background: #333; color: #fff; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; }
+        video { width: 100%; max-height: 480px; background: #000; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.7); }
+        .episodes-container { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-top: 15px; scrollbar-width: thin; scrollbar-color: #e50914 #222; }
+        .ep-btn { background: #222; color: #fff; border: 1px solid #444; padding: 8px 16px; border-radius: 5px; cursor: pointer; white-space: nowrap; font-weight: bold; transition: background 0.2s; }
+        .ep-btn:hover, .ep-btn.active { background: #e50914; border-color: #e50914; }
+        .back-btn { background: #222; color: #fff; border: 1px solid #555; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; font-weight: bold; }
+        .back-btn:hover { background: #444; }
+        .loading { text-align: center; color: #aaa; grid-column: 1 / -1; padding: 30px; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -34,100 +35,120 @@
         <h1>Zeryx Animes</h1>
     </header>
 
-    <!-- Tela Principal: Catálogo -->
+    <!-- Catálogo -->
     <div id="catalog-section">
-        <h2 style="font-size: 16px; margin-bottom: 10px;">Animes em Destaque</h2>
+        <h2 style="font-size: 16px; margin-bottom: 12px; border-left: 4px solid #e50914; padding-left: 8px;">Animes em Destaque</h2>
         <div class="grid" id="anime-grid">
-            <!-- Os cards dos animes entram aqui via JavaScript -->
-            <p style="color: #777;">Aguardando o servidor acordar...</p>
+            <div class="loading">A carregar catálogo do servidor (o Render pode demorar até 40s a acordar)...</div>
         </div>
     </div>
 
-    <!-- Tela de Reprodução -->
+    <!-- Reprodução -->
     <div id="watch-section">
         <button class="back-btn" onclick="voltarCatalogo()">⬅ Voltar ao Catálogo</button>
-        <h2 id="anime-title" style="margin-bottom: 10px; font-size: 18px;"></h2>
+        <h2 id="anime-title" style="margin-bottom: 12px; font-size: 18px; color: #e50914;"></h2>
         
         <video id="videoPlayer" controls autoplay></video>
         
-        <h3 style="margin-top: 15px; font-size: 14px;">Episódios:</h3>
+        <h3 style="margin-top: 20px; font-size: 15px;">Episódios Disponíveis:</h3>
         <div class="episodes-container" id="episodes-list">
-            <!-- Botões de episódios entram aqui -->
+            <div style="color: #aaa;">A carregar episódios...</div>
         </div>
     </div>
 
     <script>
-        // O link do seu servidor no Render
+        // Aponta diretamente para o teu backend no Render
         const API_URL = 'https://zrx-wa.onrender.com';
 
         async function carregarCatalogo() {
             try {
-                // Rota de home/populares da hianime-api
                 let resposta = await fetch(`${API_URL}/api/v1/hianime/home`);
                 let dados = await resposta.json();
                 
                 let grid = document.getElementById('anime-grid');
                 grid.innerHTML = '';
 
-                // Puxa os animes em destaque (Spotlight ou Trending)
-                let listaAnimes = dados.data.spotlightAnimes || dados.data.trendingAnimes;
+                let listaAnimes = dados.data?.spotlightAnimes || dados.data?.trendingAnimes || [];
+
+                if (listaAnimes.length === 0) {
+                    grid.innerHTML = '<div class="loading">Nenhum anime encontrado de momento.</div>';
+                    return;
+                }
 
                 listaAnimes.forEach(anime => {
                     let card = document.createElement('div');
                     card.className = 'card';
                     card.onclick = () => carregarDetalhes(anime.id, anime.name);
                     card.innerHTML = `
-                        <img src="${anime.poster}" alt="${anime.name}">
+                        <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
                         <h3>${anime.name}</h3>
                     `;
                     grid.appendChild(card);
                 });
             } catch (erro) {
                 console.error("Erro ao carregar catálogo:", erro);
-                document.getElementById('anime-grid').innerHTML = '<p style="color: #e50914;">Erro ao conectar com a API. Dica: O Render demora até 50 segundos para acordar no primeiro acesso!</p>';
+                document.getElementById('anime-grid').innerHTML = `
+                    <div class="loading" style="color: #e50914;">
+                        Erro ao conectar com o Render.<br>
+                        <small style="color: #bbb;">Dica: Se o servidor estiver inativo, aguarde alguns segundos e atualize a página.</small>
+                    </div>`;
             }
         }
 
         async function carregarDetalhes(animeId, animeTitle) {
             document.getElementById('catalog-section').style.display = 'none';
             document.getElementById('watch-section').style.display = 'block';
-            document.getElementById('anime-title').innerText = animeTitle;
+            document.getElementById('anime-titleinnerText = animeTitle;
             
             let epList = document.getElementById('episodes-list');
-            epList.innerHTML = 'Carregando episódios...';
+            epList.innerHTML = '<div style="color: #aaa;">A carregar lista de episódios...</div>';
 
             try {
                 let resposta = await fetch(`${API_URL}/api/v1/hianime/anime/${animeId}/episodes`);
                 let dados = await resposta.json();
 
                 epList.innerHTML = '';
-                let episodios = dados.data.episodes;
+                let episodios = dados.data?.episodes || [];
+
+                if (episodios.length === 0) {
+                    epList.innerHTML = '<div style="color: #e50914;">Nenhum episódio encontrado.</div>';
+                    return;
+                }
 
                 episodios.forEach(ep => {
                     let btn = document.createElement('button');
                     btn.className = 'ep-btn';
+                    btn.id = `ep-${ep.episodeId}`;
                     btn.innerText = `Ep ${ep.number}`;
-                    btn.onclick = () => assistirEpisodio(ep.episodeId);
+                    btn.onclick = () => assistirEpisodio(ep.episodeId, btn);
                     epList.appendChild(btn);
                 });
 
-                // Toca o primeiro episódio automaticamente
+                // Toca o primeiro episódio por defeito
                 if(episodios.length > 0) {
-                    assistirEpisodio(episodios[0].episodeId);
+                    assistirEpisodio(episodios[0].episodeId, document.getElementById(`ep-${episodios[0].episodeId}`));
                 }
             } catch (erro) {
                 console.error("Erro ao carregar episódios:", erro);
-                epList.innerHTML = 'Erro ao carregar lista de episódios.';
+                epList.innerHTML = '<div style="color: #e50914;">Erro ao carregar os episódios.</div>';
             }
         }
 
-        async function assistirEpisodio(episodeId) {
+        async function assistirEpisodio(episodeId, btnElement) {
+            document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
+            if(btnElement) btnElement.classList.add('active');
+
             try {
                 let resposta = await fetch(`${API_URL}/api/v1/hianime/episode/sources?animeEpisodeId=${episodeId}`);
                 let dados = await resposta.json();
 
-                // Pega a URL do link de streaming retornado pela API
-                let videoUrl = dados.data.sources.find(s => s.type === 'hls')?.url || dados.data.sources[0].url;
+                let sources = dados.data?.sources || [];
+                let videoUrl = sources.find(s => s.type === 'hls')?.url || sources[0]?.url;
+
+                if (!videoUrl) {
+                    alert("Link de vídeo indisponível para este episódio.");
+                    return;
+                }
 
                 let video = document.getElementById('videoPlayer');
 
@@ -140,7 +161,7 @@
                 }
             } catch (erro) {
                 console.error("Erro ao carregar o vídeo:", erro);
-                alert("Erro ao carregar o link do vídeo deste episódio.");
+                alert("Erro ao carregar a fonte de vídeo.");
             }
         }
 
@@ -152,7 +173,6 @@
             video.src = "";
         }
 
-        // Inicia o app carregando os animes
         carregarCatalogo();
     </script>
 </body>
