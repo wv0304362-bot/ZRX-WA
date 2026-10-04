@@ -53,7 +53,7 @@
         
         /* Informações e Temporadas */
         .seasons-container { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        .season-btn { background: #181818; color: #fff; border: 1px solid #444; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .season-btn { background: #181818; color: #fff; border: 1px solid #444; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .season-btn:hover, .season-btn.active { background: #e50914; border-color: #e50914; }
 
         .loading { text-align: center; color: #aaa; padding: 30px; font-size: 15px; width: 100%; }
@@ -99,13 +99,10 @@
         
         <video id="videoPlayer" controls autoplay></video>
         
-        <!-- Temporadas -->
+        <!-- Temporadas Reais do Anime -->
         <div id="seasons-section" style="margin-top: 15px;">
             <h3 style="font-size: 14px; margin-bottom: 6px; color: #ccc;">Temporadas:</h3>
-            <div class="seasons-container" id="seasons-list">
-                <button class="season-btn active">Temporada 1 (Completa)</button>
-                <button class="season-btn">Temporada 2 (Em Breve)</button>
-            </div>
+            <div class="seasons-container" id="seasons-list"></div>
         </div>
 
         <h3 style="margin-top: 15px; font-size: 14px; color: #ccc;">Episódios Disponíveis:</h3>
@@ -113,23 +110,68 @@
     </div>
 
     <script>
-        // Listas de animes com capas garantidas e funcionais
+        // Base de dados com capas reais e oficiais de cada anime e as respetivas temporadas reais
         const spotlightList = [
-            { id: "one-piece", name: "One Piece", poster: "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400&q=80", seasons: ["Temporada 1", "Temporada 2"] },
-            { id: "jujutsu-kaisen", name: "Jujutsu Kaisen", poster: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&q=80", seasons: ["Temporada 1", "Temporada 2"] },
-            { id: "naruto", name: "Naruto", poster: "https://images.unsplash.com/photo-1618336753974-aae8e04506aa?w=400&q=80", seasons: ["Clássico", "Shippuden"] }
+            { 
+                id: "one-piece", 
+                name: "One Piece", 
+                poster: "https://cdn.myanimelist.net/images/anime/1244/137368.jpg", 
+                seasons: ["Saga East Blue", "Saga Alabasta", "Saga Skypiea", "Saga Enies Lobby", "Saga Marineford", "Wano Country"] 
+            },
+            { 
+                id: "jujutsu-kaisen", 
+                name: "Jujutsu Kaisen", 
+                poster: "https://cdn.myanimelist.net/images/anime/1179/133860.jpg", 
+                seasons: ["Temporada 1", "Temporada 2 (Incidente de Shibuya)"] 
+            },
+            { 
+                id: "naruto", 
+                name: "Naruto", 
+                poster: "https://cdn.myanimelist.net/images/anime/13/17405.jpg", 
+                seasons: ["Naruto Clássico", "Naruto Shippuden"] 
+            }
         ];
 
-        const actionList = [
-            { id: "attack-on-titan", name: "Attack on Titan", poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&q=80", seasons: ["Temporada Final", "Parte 1 & 2"] },
-            { id: "demon-slayer", name: "Demon Slayer", poster: "https://images.unsplash.com/photo-1563089145-599997674d42?w=400&q=80", seasons: ["Kimetsu no Yaiba", "Arcos Infinitos"] },
-            { id: "solo-leveling", name: "Solo Leveling", poster: "https://images.unsplash.com/photo-1614680376593-902f749f7ffc?w=400&q=80", seasons: ["Temporada 1"] }
+            const actionList = [
+            { 
+                id: "attack-on-titan", 
+                name: "Attack on Titan", 
+                poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg", 
+                seasons: ["Temporada 1", "Temporada 2", "Temporada 3", "Temporada Final (The Final Season)"] 
+            },
+            { 
+                id: "demon-slayer", 
+                name: "Demon Slayer", 
+                poster: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg", 
+                seasons: ["Arcos Iniciais (Tanjiro Kamado)", "Arco do Trem Infinito", "Distrito do Entretenimento", "Vila dos Ferreiros"] 
+            },
+            { 
+                id: "solo-leveling", 
+                name: "Solo Leveling", 
+                poster: "https://cdn.myanimelist.net/images/anime/1075/141416.jpg", 
+                seasons: ["Temporada 1 (O Caçador Mais Fraco)"] 
+            }
         ];
 
         const popularList = [
-            { id: "horimiya", name: "Horimiya", poster: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400&q=80", seasons: ["Temporada 1"] },
-            { id: "your-name", name: "Your Name", poster: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&q=80", seasons: ["Filme Completo"] },
-            { id: "dragon-ball", name: "Dragon Ball Z", poster: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=400&q=80", seasons: ["Saga Saiyajin", "Saga Freeza"] }
+            { 
+                id: "dragon-ball", 
+                name: "Dragon Ball Z", 
+                poster: "https://cdn.myanimelist.net/images/anime/1930/135249.jpg", 
+                seasons: ["Saga Saiyajin", "Saga Freeza", "Saga Cell", "Saga Majin Boo"] 
+            },
+            { 
+                id: "bleach", 
+                name: "Bleach", 
+                poster: "https://cdn.myanimelist.net/images/anime/3/40451.jpg", 
+                seasons: ["Subs. Soul Society", "Arco Arrancar", "A Guerra Sangrenta dos Mil Anos"] 
+            },
+            { 
+                id: "chainsaw-man", 
+                name: "Chainsaw Man", 
+                poster: "https://cdn.myanimelist.net/images/anime/1806/126216.jpg", 
+                seasons: ["Temporada 1 (Segurança Pública)"] 
+            }
         ];
 
         function carregarCatalogo() {
@@ -180,7 +222,7 @@
             document.getElementById('watch-section').style.display = 'block';
             document.getElementById('anime-title').innerText = anime.name;
 
-            // Renderizar Temporadas
+            // Renderizar Temporadas Reais do Anime
             let seasonsList = document.getElementById('seasons-list');
             seasonsList.innerHTML = '';
             anime.seasons.forEach((season, idx) => {
@@ -194,7 +236,7 @@
                 seasonsList.appendChild(btn);
             });
 
-            // Renderizar Episódios de Demonstração Funcionais
+            // Renderizar Episódios
             let epList = document.getElementById('episodes-list');
             epList.innerHTML = '';
             for (let i = 1; i <= 12; i++) {
@@ -215,7 +257,6 @@
 
         function reproduzirVideoMock() {
             let video = document.getElementById('videoPlayer');
-            // Usando um vídeo de teste público estável em HLS para o player funcionar perfeitamente
             let videoUrl = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
 
             if (Hls.isSupported()) {
