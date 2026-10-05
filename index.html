@@ -98,22 +98,15 @@
         <h2 id="anime-title" style="margin-bottom: 8px; font-size: 18px; color: #e50914;"></h2>
         
         <video id="videoPlayer" controls autoplay></video>
-        
-        <!-- Temporadas Reais -->
-        <div id="seasons-section" style="margin-top: 15px;">
-            <h3 style="font-size: 14px; margin-bottom: 6px; color: #ccc;">Temporadas:</h3>
-            <div class="seasons-container" id="seasons-list"></div>
-        </div>
 
-        <h3 style="margin-top: 15px; font-size: 14px; color: #ccc;">Episódios Disponíveis:</h3>
-        <div class="episodes-container" id="episodes-list"></div>
+        <h3 style="margin-top: 15px; font-size: 14px; color: #ccc;">Episódios Disponíveis (Via API Render):</h3>
+        <div class="episodes-container" id="episodes-list"><div class="loading">A carregar episódios reais...</div></div>
     </div>
 
     <script>
-        // Repositório central de animes carregados dinamicamente via Jikan API
+        const API_RENDER_URL = "https://zrx-wa.onrender.com";
         let catalogoAnimes = {};
 
-        // Listas predefinidas de buscas para preencher as secções iniciais automaticamente
         const top3Queries = ["One Piece", "Jujutsu Kaisen", "Naruto"];
         const actionQueries = ["Attack on Titan", "Demon Slayer", "Solo Leveling"];
         const popularQueries = ["Dragon Ball Z", "Bleach", "Chainsaw Man"];
@@ -126,13 +119,11 @@
                     let anime = dados.data[0];
                     let key = anime.mal_id.toString();
                     
+                    // Salvamos a estrutura com o ID / slug aproximado para o HiAnime
                     catalogoAnimes[key] = {
                         name: anime.title,
                         poster: anime.images.jpg.large_image_url || anime.images.jpg.image_url,
-                        seasons: [
-                            { name: "Temporada Principal", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                            { name: "Temporada Alternativa / Extra", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
-                        ]
+                        slug: anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + anime.mal_id
                     };
                     return key;
                 }
@@ -147,21 +138,18 @@
             let actionKeys = [];
             let popularKeys = [];
 
-            // Buscar Top 3
             for (let q of top3Queries) {
                 let key = await buscarAnimeAPI(q);
                 if (key) top3Keys.push(key);
-                await new Promise(r => setTimeout(r, 400)); // Pausa curta para respeitar limites da API
+                await new Promise(r => setTimeout(r, 400));
             }
 
-            // Buscar Ação
             for (let q of actionQueries) {
                 let key = await buscarAnimeAPI(q);
                 if (key) actionKeys.push(key);
                 await new Promise(r => setTimeout(r, 400));
             }
 
-            // Buscar Populares
             for (let q of popularQueries) {
                 let key = await buscarAnimeAPI(q);
                 if (key) popularKeys.push(key);
@@ -213,11 +201,9 @@
         }
 
         let animeAtualKey = null;
-        let temporadaAtualIndex = 0;
 
-        function abrirAnime(key) {
+        async function abrirAnime(key) {
             animeAtualKey = key;
-            temporadaAtualIndex = 0;
             let anime = catalogoAnimes[key];
 
             document.getElementById('catalog-section').style.display = 'none';
@@ -225,55 +211,38 @@
             document.getElementById('watch-section').style.display = 'block';
             document.getElementById('anime-title').innerText = anime.name;
 
-            // Renderizar Temporadas
-            let seasonsList = document.getElementById('seasons-list');
-            seasonsList.innerHTML = '';
-            anime.seasons.forEach((season, idx) => {
-                let btn = document.createElement('button');
-                btn.className = `season-btn ${idx === 0 ? 'active' : ''}`;
-                btn.innerText = season.name;
-                btn.onclick = () => {
-                    document.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    temporadaAtualIndex = idx;
-                    reproduzirTemporadaEpisodio();
-                };
-                seasonsList.appendChild(btn);
-            });
-
-            // Renderizar Episódios
             let epList = document.getElementById('episodes-list');
-            epList.innerHTML = '';
-            for (let i = 1; i <= 12; i++) {
-                let btn = document.createElement('button');
-                btn.className = 'ep-btn';
-                if (i === 1) btn.classList.add('active');
-                btn.innerText = `Ep ${i}`;
-                btn.onclick = () => {
-                    document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    reproduzirTemporadaEpisodio();
-                };
-                epList.appendChild(btn);
-            }
+            epList.innerHTML = '<div class="loading">A carregar episódios da tua API do Render...</div>';
 
-            reproduzirTemporadaEpisodio();
-        }
+            try {
+                // Chamada direta ao controlador de episódios da tua API no Render
+                let resposta = await fetch(`${API_RENDER_URL}/api/v2/anime/episodes/${anime.slug}`);
+                let dados = await resposta.json();
 
-        function reproduzirTemporadaEpisodio() {
-            let anime = catalogoAnimes[animeAtualKey];
-            let temporada = anime.seasons[temporadaAtualIndex] || anime.seasons[0];
-            let video = document.getElementById('videoPlayer');
-            let videoUrl = temporada.stream;
+                epList.innerHTML = '';
+                // Verifica o formato retornado pela tua API (se vier dentro de data ou direto)
+                let episodios = dados.data || dados;
 
-            if (Hls.isSupported()) {
-                let hls = new Hls();
-                hls.loadSource(videoUrl);
-                hls.attachMedia(video);
-                video.play().catch(() => {});
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = videoUrl;
-                video.play().catch(() => {});
+                if (!episodios || episodios.length === 0) {
+                    epList.innerHTML = '<div class="loading">Nenhum episódio encontrado para este anime.</div>';
+                    return;
+                }
+
+                episodios.forEach((ep, idx) => {
+                    let btn = document.createElement('button');
+                    btn.className = 'ep-btn';
+                    if (idx === 0) btn.classList.add('active');
+                    btn.innerText = `Ep ${ep.episodeNumber || (idx + 1)}`;
+                    btn.onclick = () => {
+                        document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        // Aqui podes associar o ID do episódio para extrair o link de vídeo a seguir
+                    };
+                    epList.appendChild(btn);
+                });
+
+            } catch (e) {
+                epList.innerHTML = '<div class="loading">Erro ao comunicar com a API do Render. Verifica se o servidor acordou.</div>';
             }
         }
 
@@ -290,7 +259,7 @@
             searchSec.style.display = 'block';
             
             let searchGrid = document.getElementById('search-grid');
-            searchGrid.innerHTML = '<div class="loading">A pesquisar na base de dados do MyAnimeList...</div>';
+            searchGrid.innerHTML = '<div class="loading">A pesquisar...</div>';
             document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
 
             try {
@@ -308,15 +277,12 @@
                     catalogoAnimes[key] = {
                         name: anime.title,
                         poster: anime.images.jpg.large_image_url || anime.images.jpg.image_url,
-                        seasons: [
-                            { name: "Temporada Principal", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                            { name: "Temporada Alternativa", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
-                        ]
+                        slug: anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + anime.mal_id
                     };
                     searchGrid.appendChild(criarCardHorizontal(key));
                 });
             } catch (e) {
-                searchGrid.innerHTML = '<div class="loading">Erro ao ligar à API de pesquisa.</div>';
+                searchGrid.innerHTML = '<div class="loading">Erro ao pesquisar.</div>';
             }
         }
 
@@ -339,7 +305,6 @@
             video.src = "";
         }
 
-        // Iniciar carregamento automático do catálogo via Jikan API
         inicializarCatalogoDinamico();
     </script>
 </body>
