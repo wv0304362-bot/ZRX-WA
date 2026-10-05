@@ -102,13 +102,13 @@
         const API_RENDER_URL = "https://zrx-wa.onrender.com";
         let catalogoAnimes = {};
 
-        // Lista de segurança pré-configurada com IDs oficiais e imagens diretas do MyAnimeList caso a API limite o acesso inicial
+        // Base de dados segura com slugs padronizados testados para evitar erros 404
         const catalogoFallback = {
             "21": { name: "One Piece", poster: "https://cdn.myanimelist.net/images/anime/1244/137368.jpg", slug: "one-piece-21" },
             "51498": { name: "Jujutsu Kaisen", poster: "https://cdn.myanimelist.net/images/anime/1179/133860.jpg", slug: "jujutsu-kaisen-2nd-season-51498" },
             "20": { name: "Naruto", poster: "https://cdn.myanimelist.net/images/anime/13/17405.jpg", slug: "naruto-20" },
-            "16498": { name: "Attack on Titan", poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg", slug: "shingeki-no-kyojin-16498" },
-            "38000": { name: "Demon Slayer", poster: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg", slug: "kimetsu-no-yaiba-38000" },
+            "16498": { name: "Attack on Titan", poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg", slug: "attack-on-titan-16498" },
+            "38000": { name: "Demon Slayer", poster: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg", slug: "demon-slayer-kimetsu-no-yaiba-38000" },
             "56431": { name: "Solo Leveling", poster: "https://cdn.myanimelist.net/images/anime/1075/141416.jpg", slug: "solo-leveling-56431" },
             "223": { name: "Dragon Ball Z", poster: "https://cdn.myanimelist.net/images/anime/1930/135249.jpg", slug: "dragon-ball-z-223" },
             "269": { name: "Bleach", poster: "https://cdn.myanimelist.net/images/anime/3/40451.jpg", slug: "bleach-269" },
@@ -119,26 +119,8 @@
         const actionKeys = ["16498", "38000", "56431"];
         const popularKeys = ["223", "269", "51105"];
 
-        async function inicializarCatalogo() {
-            // Carrega primeiro o fallback de segurança para garantir visualização imediata
+        function inicializarCatalogo() {
             catalogoAnimes = { ...catalogoFallback };
-            renderizarGrids(top3Keys, actionKeys, popularKeys);
-
-            // Tenta atualizar dinamicamente com a Jikan API em segundo plano de forma segura
-            for (let key of Object.keys(catalogoFallback)) {
-                try {
-                    let nomeOriginal = catalogoFallback[key].name;
-                    let resposta = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(nomeOriginal)}&limit=1`);
-                    let dados = await resposta.json();
-                    if (dados.data && dados.data.length > 0) {
-                        let anime = dados.data[0];
-                        catalogoAnimes[key].poster = anime.images.jpg.large_image_url || anime.images.jpg.image_url;
-                    }
-                } catch (e) {
-                    // Mantém a imagem padrão do fallback se houver falha de rede ou limite de API
-                }
-                await new Promise(r => setTimeout(r, 600)); // Pausa para respeitar a taxa da Jikan API
-            }
             renderizarGrids(top3Keys, actionKeys, popularKeys);
         }
 
@@ -286,7 +268,7 @@
             video.src = "";
         }
 
-        // Iniciar catálogo com sistema híbrido de segurança
+        // Iniciar catálogo otimizado
         inicializarCatalogo();
     </script>
 </body>
