@@ -110,7 +110,7 @@
     </div>
 
     <script>
-        // Função auxiliar para passar imagens por proxy seguro contra bloqueios de CORS/Hotlinking
+        // Função proxy universal para garantir que todas as imagens carregam sem bloqueios de CORS
         function imgProxy(url) {
             return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
         }
@@ -121,9 +121,7 @@
                 poster: imgProxy("https://cdn.myanimelist.net/images/anime/1244/137368.jpg"),
                 seasons: [
                     { name: "Saga East Blue", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Saga Alabasta", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
-                    { name: "Saga Skypiea", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Saga Marineford", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                    { name: "Saga Alabasta", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
                 ]
             },
             "jujutsu-kaisen-531": {
@@ -147,18 +145,14 @@
                 poster: imgProxy("https://cdn.myanimelist.net/images/anime/10/47347.jpg"),
                 seasons: [
                     { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Temporada 2", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
-                    { name: "Temporada 3", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "The Final Season", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                    { name: "Temporada 2", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
                 ]
             },
             "demon-slayer-47": {
                 name: "Demon Slayer",
                 poster: imgProxy("https://cdn.myanimelist.net/images/anime/1286/99889.jpg"),
                 seasons: [
-                    { name: "Tanjiro Kamado Arc", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Arco do Trem Infinito", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
-                    { name: "Distrito do Entretenimento", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Tanjiro Kamado Arc", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
             },
             "solo-leveling-18718": {
@@ -172,16 +166,14 @@
                 name: "Dragon Ball Z",
                 poster: imgProxy("https://cdn.myanimelist.net/images/anime/1930/135249.jpg"),
                 seasons: [
-                    { name: "Saga Saiyajin / Freeza", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Saga Cell / Majin Boo", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                    { name: "Dragon Ball Z", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
             },
             "bleach-93": {
                 name: "Bleach",
                 poster: imgProxy("https://cdn.myanimelist.net/images/anime/3/40451.jpg"),
                 seasons: [
-                    { name: "Soul Society / Arrancar", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Guerra Sangrenta dos Mil Anos", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                    { name: "Bleach", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
             },
             "chainsaw-man-17406": {
@@ -262,7 +254,7 @@
                     document.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     temporadaAtualIndex = idx;
-                    reproduzirTemporadaEpisodio(1);
+                    reproduzirTemporadaEpisodio();
                 };
                 seasonsList.appendChild(btn);
             });
@@ -278,15 +270,15 @@
                 btn.onclick = () => {
                     document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    reproduzirTemporadaEpisodio(i);
+                    reproduzirTemporadaEpisodio();
                 };
                 epList.appendChild(btn);
             }
 
-            reproduzirTemporadaEpisodio(1);
+            reproduzirTemporadaEpisodio();
         }
 
-        function reproduzirTemporadaEpisodio(epNum) {
+        function reproduzirTemporadaEpisodio() {
             let anime = catalogoAnimes[animeAtualKey];
             let temporada = anime.seasons[temporadaAtualIndex] || anime.seasons[0];
             let video = document.getElementById('videoPlayer');
