@@ -74,15 +74,15 @@
         
         <!-- Top 3 Animes em Destaque -->
         <h2 class="section-title">🏆 Top 3 em Destaque</h2>
-        <div class="top3-container" id="top3-grid"></div>
+        <div class="top3-container" id="top3-grid"><div class="loading">A carregar capas oficiais...</div></div>
 
         <!-- Categoria: Ação -->
         <h2 class="section-title">⚔️ Animes de Ação</h2>
-        <div class="horizontal-scroll" id="action-grid"></div>
+        <div class="horizontal-scroll" id="action-grid"><div class="loading">A carregar...</div></div>
 
         <!-- Categoria: Populares -->
         <h2 class="section-title">💖 Animes Populares</h2>
-        <div class="horizontal-scroll" id="romance-grid"></div>
+        <div class="horizontal-scroll" id="romance-grid"><div class="loading">A carregar...</div></div>
 
     </div>
 
@@ -110,82 +110,68 @@
     </div>
 
     <script>
-        // Links diretos otimizados para WebView sem depender de proxies externos bloqueados
-        const catalogoAnimes = {
-            "one-piece-100": {
-                name: "One Piece",
-                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1244/137368.jpg",
-                seasons: [
-                    { name: "Saga East Blue", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Saga Alabasta", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
-                ]
-            },
-            "jujutsu-kaisen-531": {
-                name: "Jujutsu Kaisen",
-                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1179/133860.jpg",
-                seasons: [
-                    { name: "Temporada 1", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
-                    { name: "Temporada 2 (Shibuya)", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
-                ]
-            },
-            "naruto-20": {
-                name: "Naruto",
-                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/13/17405.jpg",
-                seasons: [
-                    { name: "Naruto Clássico", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Naruto Shippuden", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
-                ]
-            },
-            "attack-on-titan-112": {
-                name: "Attack on Titan",
-                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/10/47347.jpg",
-                seasons: [
-                    { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Temporada 2", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
-                ]
-            },
-            "demon-slayer-47": {
-                name: "Demon Slayer",
-                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1286/99889.jpg",
-                seasons: [
-                    { name: "Tanjiro Kamado Arc", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
-                ]
-            },
-            "solo-leveling-18718": {
-                name: "Solo Leveling",
-                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1075/141416.jpg",
-                seasons: [
-                    { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
-                ]
-            },
-            "dragon-ball-z-211": {
-                name: "Dragon Ball Z",
-                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1930/135249.jpg",
-                seasons: [
-                    { name: "Dragon Ball Z", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
-                ]
-            },
-            "bleach-93": {
-                name: "Bleach",
-                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/3/40451.jpg",
-                seasons: [
-                    { name: "Bleach", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
-                ]
-            },
-            "chainsaw-man-17406": {
-                name: "Chainsaw Man",
-                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1806/126216.jpg",
-                seasons: [
-                    { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
-                ]
+        // Repositório central de animes carregados dinamicamente via Jikan API
+        let catalogoAnimes = {};
+
+        // Listas predefinidas de buscas para preencher as secções iniciais automaticamente
+        const top3Queries = ["One Piece", "Jujutsu Kaisen", "Naruto"];
+        const actionQueries = ["Attack on Titan", "Demon Slayer", "Solo Leveling"];
+        const popularQueries = ["Dragon Ball Z", "Bleach", "Chainsaw Man"];
+
+        async function buscarAnimeAPI(nomeQuery) {
+            try {
+                let resposta = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(nomeQuery)}&limit=1`);
+                let dados = await resposta.json();
+                if (dados.data && dados.data.length > 0) {
+                    let anime = dados.data[0];
+                    let key = anime.mal_id.toString();
+                    
+                    catalogoAnimes[key] = {
+                        name: anime.title,
+                        poster: anime.images.jpg.large_image_url || anime.images.jpg.image_url,
+                        seasons: [
+                            { name: "Temporada Principal", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                            { name: "Temporada Alternativa / Extra", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                        ]
+                    };
+                    return key;
+                }
+            } catch (e) {
+                console.error("Erro ao buscar da API Jikan:", e);
             }
-        };
+            return null;
+        }
 
-        const top3Keys = ["one-piece-100", "jujutsu-kaisen-531", "naruto-20"];
-        const actionKeys = ["attack-on-titan-112", "demon-slayer-47", "solo-leveling-18718"];
-        const popularKeys = ["dragon-ball-z-211", "bleach-93", "chainsaw-man-17406"];
+        async function inicializarCatalogoDinamico() {
+            let top3Keys = [];
+            let actionKeys = [];
+            let popularKeys = [];
 
-        function carregarCatalogo() {
+            // Buscar Top 3
+            for (let q of top3Queries) {
+                let key = await buscarAnimeAPI(q);
+                if (key) top3Keys.push(key);
+                await new Promise(r => setTimeout(r, 400)); // Pausa curta para respeitar limites da API
+            }
+
+            // Buscar Ação
+            for (let q of actionQueries) {
+                let key = await buscarAnimeAPI(q);
+                if (key) actionKeys.push(key);
+                await new Promise(r => setTimeout(r, 400));
+            }
+
+            // Buscar Populares
+            for (let q of popularQueries) {
+                let key = await buscarAnimeAPI(q);
+                if (key) popularKeys.push(key);
+                await new Promise(r => setTimeout(r, 400));
+            }
+
+            renderizarGrids(top3Keys, actionKeys, popularKeys);
+        }
+
+        function renderizarGrids(top3Keys, actionKeys, popularKeys) {
             let top3Grid = document.getElementById('top3-grid');
             top3Grid.innerHTML = '';
             top3Keys.forEach((key, index) => {
@@ -291,8 +277,8 @@
             }
         }
 
-        function pesquisarAnime() {
-            let query = document.getElementById('searchInput').value.trim().toLowerCase();
+        async function pesquisarAnime() {
+            let query = document.getElementById('searchInput').value.trim();
             if (!query) {
                 document.getElementById('search-results-section').style.display = 'none';
                 document.getElementById('catalog-section').style.display = 'block';
@@ -304,20 +290,34 @@
             searchSec.style.display = 'block';
             
             let searchGrid = document.getElementById('search-grid');
-            searchGrid.innerHTML = '';
+            searchGrid.innerHTML = '<div class="loading">A pesquisar na base de dados do MyAnimeList...</div>';
             document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
 
-            let chaves = Object.keys(catalogoAnimes);
-            let filtrados = chaves.filter(k => catalogoAnimes[k].name.toLowerCase().includes(query));
+            try {
+                let resposta = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=8`);
+                let dados = await resposta.json();
 
-            if (filtrados.length === 0) {
-                searchGrid.innerHTML = '<div class="loading">Nenhum anime encontrado.</div>';
-                return;
+                searchGrid.innerHTML = '';
+                if (!dados.data || dados.data.length === 0) {
+                    searchGrid.innerHTML = '<div class="loading">Nenhum anime encontrado.</div>';
+                    return;
+                }
+
+                dados.data.forEach(anime => {
+                    let key = anime.mal_id.toString();
+                    catalogoAnimes[key] = {
+                        name: anime.title,
+                        poster: anime.images.jpg.large_image_url || anime.images.jpg.image_url,
+                        seasons: [
+                            { name: "Temporada Principal", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                            { name: "Temporada Alternativa", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                        ]
+                    };
+                    searchGrid.appendChild(criarCardHorizontal(key));
+                });
+            } catch (e) {
+                searchGrid.innerHTML = '<div class="loading">Erro ao ligar à API de pesquisa.</div>';
             }
-
-            filtrados.forEach(key => {
-                searchGrid.appendChild(criarCardHorizontal(key));
-            });
         }
 
         function verificarEnter(event) {
@@ -339,7 +339,8 @@
             video.src = "";
         }
 
-        carregarCatalogo();
+        // Iniciar carregamento automático do catálogo via Jikan API
+        inicializarCatalogoDinamico();
     </script>
 </body>
 </html>
