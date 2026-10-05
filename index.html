@@ -110,7 +110,7 @@
     </div>
 
     <script>
-        // Função proxy universal para garantir que todas as imagens carregam sem bloqueios de CORS
+        // Função proxy universal para garantir carregamento perfeito das imagens sem bloqueios CORS
         function imgProxy(url) {
             return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
         }
@@ -121,7 +121,8 @@
                 poster: imgProxy("https://cdn.myanimelist.net/images/anime/1244/137368.jpg"),
                 seasons: [
                     { name: "Saga East Blue", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Saga Alabasta", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                    { name: "Saga Alabasta", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
+                    { name: "Saga Skypiea", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
             },
             "jujutsu-kaisen-531": {
@@ -145,14 +146,16 @@
                 poster: imgProxy("https://cdn.myanimelist.net/images/anime/10/47347.jpg"),
                 seasons: [
                     { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Temporada 2", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                    { name: "Temporada 2", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
+                    { name: "Temporada 3", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
             },
             "demon-slayer-47": {
                 name: "Demon Slayer",
                 poster: imgProxy("https://cdn.myanimelist.net/images/anime/1286/99889.jpg"),
                 seasons: [
-                    { name: "Tanjiro Kamado Arc", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Tanjiro Kamado Arc", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+                    { name: "Trem Infinito", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
                 ]
             },
             "solo-leveling-18718": {
