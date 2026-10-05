@@ -110,24 +110,19 @@
     </div>
 
     <script>
-        // Função proxy universal para garantir carregamento perfeito das imagens sem bloqueios CORS
-        function imgProxy(url) {
-            return `https://images.weserv.nl/?url=${encodeURIComponent(url)}`;
-        }
-
+        // Links diretos otimizados para WebView sem depender de proxies externos bloqueados
         const catalogoAnimes = {
             "one-piece-100": {
                 name: "One Piece",
-                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1244/137368.jpg"),
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1244/137368.jpg",
                 seasons: [
                     { name: "Saga East Blue", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Saga Alabasta", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
-                    { name: "Saga Skypiea", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Saga Alabasta", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
                 ]
             },
             "jujutsu-kaisen-531": {
                 name: "Jujutsu Kaisen",
-                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1179/133860.jpg"),
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1179/133860.jpg",
                 seasons: [
                     { name: "Temporada 1", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
                     { name: "Temporada 2 (Shibuya)", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
@@ -135,7 +130,7 @@
             },
             "naruto-20": {
                 name: "Naruto",
-                poster: imgProxy("https://cdn.myanimelist.net/images/anime/13/17405.jpg"),
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/13/17405.jpg",
                 seasons: [
                     { name: "Naruto Clássico", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
                     { name: "Naruto Shippuden", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
@@ -143,45 +138,43 @@
             },
             "attack-on-titan-112": {
                 name: "Attack on Titan",
-                poster: imgProxy("https://cdn.myanimelist.net/images/anime/10/47347.jpg"),
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/10/47347.jpg",
                 seasons: [
                     { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Temporada 2", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" },
-                    { name: "Temporada 3", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
+                    { name: "Temporada 2", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
                 ]
             },
             "demon-slayer-47": {
                 name: "Demon Slayer",
-                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1286/99889.jpg"),
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1286/99889.jpg",
                 seasons: [
-                    { name: "Tanjiro Kamado Arc", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
-                    { name: "Trem Infinito", stream: "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8" }
+                    { name: "Tanjiro Kamado Arc", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
             },
             "solo-leveling-18718": {
                 name: "Solo Leveling",
-                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1075/141416.jpg"),
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1075/141416.jpg",
                 seasons: [
                     { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
             },
             "dragon-ball-z-211": {
                 name: "Dragon Ball Z",
-                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1930/135249.jpg"),
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1930/135249.jpg",
                 seasons: [
                     { name: "Dragon Ball Z", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
             },
             "bleach-93": {
                 name: "Bleach",
-                poster: imgProxy("https://cdn.myanimelist.net/images/anime/3/40451.jpg"),
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/3/40451.jpg",
                 seasons: [
                     { name: "Bleach", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
             },
             "chainsaw-man-17406": {
                 name: "Chainsaw Man",
-                poster: imgProxy("https://cdn.myanimelist.net/images/anime/1806/126216.jpg"),
+                poster: "https://images.weserv.nl/?url=https://cdn.myanimelist.net/images/anime/1806/126216.jpg",
                 seasons: [
                     { name: "Temporada 1", stream: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" }
                 ]
@@ -202,7 +195,7 @@
                 card.onclick = () => abrirAnime(key);
                 card.innerHTML = `
                     <div class="top3-badge">Top ${index + 1}</div>
-                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
+                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
                     <h3>${anime.name}</h3>
                 `;
                 top3Grid.appendChild(card);
@@ -227,7 +220,7 @@
             card.className = 'card';
             card.onclick = () => abrirAnime(key);
             card.innerHTML = `
-                <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
+                <img src="${anime.poster}" alt="${anime.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
                 <h3>${anime.name}</h3>
             `;
             return card;
@@ -291,8 +284,10 @@
                 let hls = new Hls();
                 hls.loadSource(videoUrl);
                 hls.attachMedia(video);
+                video.play().catch(() => {});
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = videoUrl;
+                video.play().catch(() => {});
             }
         }
 
