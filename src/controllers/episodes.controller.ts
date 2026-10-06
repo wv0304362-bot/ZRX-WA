@@ -11,7 +11,7 @@ const episodesController = async (c: Context): Promise<Episode[]> => {
 
   const idNum = id.split('-').at(-1);
 
-  // Tenta as rotas alternativas de AJAX do HiAnime no novo domínio
+  // Endpoints AJAX mais comuns nos espelhos atuais (.at e .ru)
   const possibleEndpoints = [
     `/ajax/v2/episode/list/${idNum}`,
     `/ajax/v1/episode/list/${idNum}`,
@@ -23,7 +23,10 @@ const episodesController = async (c: Context): Promise<Episode[]> => {
   for (const endpoint of possibleEndpoints) {
     try {
       const res = await axiosInstance(endpoint, {
-        headers: { Referer: `${config.baseurl}/watch/${id}` },
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Referer': `${config.baseurl}/watch/${id}`,
+        },
       });
       if (res && (res.success || res.html || res.data)) {
         result = res;
