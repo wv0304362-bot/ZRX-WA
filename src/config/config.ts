@@ -1,6 +1,6 @@
 const config = {
-  baseurl: 'https://aniwatchtv.to',
-  baseurl2: 'https://aniwatchtv.to',
+  baseurl: 'https://aniwatchtv.ro',
+  baseurl2: 'https://aniwatchtv.ro',
   origin: '*',
   port: 5000,
 
