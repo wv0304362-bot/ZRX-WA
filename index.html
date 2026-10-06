@@ -24,14 +24,6 @@
         /* Secções e Títulos */
         .section-title { font-size: 16px; margin: 20px 0 10px 0; border-left: 4px solid #e50914; padding-left: 8px; }
 
-        /* Top 3 Destaques Especiais */
-        .top3-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .top3-card { background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; position: relative; text-align: center; transition: transform 0.2s; }
-        .top3-card:hover { transform: scale(1.03); }
-        .top3-card img { width: 100%; height: 160px; object-fit: cover; background: #222; display: block; }
-        .top3-badge { position: absolute; top: 5px; left: 5px; background: #e50914; color: #fff; font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 4px; z-index: 2; }
-        .top3-card h3 { font-size: 12px; padding: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
         /* Carrossel Horizontal para Categorias */
         .horizontal-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin; scrollbar-color: #e50914 #222; }
         .horizontal-scroll::-webkit-scrollbar { height: 6px; }
@@ -42,7 +34,7 @@
         .card img { width: 100%; height: 170px; object-fit: cover; background: #222; display: block; }
         .card h3 { font-size: 12px; padding: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Tela do Player e Episódios / Temporadas */
+        /* Tela do Player e Episódios */
         #watch-section { display: none; margin-top: 20px; }
         video { width: 100%; max-height: 480px; background: #000; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.7); }
         .episodes-container { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-top: 15px; scrollbar-width: thin; scrollbar-color: #e50914 #222; }
@@ -61,26 +53,17 @@
         <h1>Zeryx Animes</h1>
         <div id="serverStatus" class="server-status">A acordar o servidor no Render...</div>
         <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar anime (ex: Pokémon, Naruto)..." onkeypress="verificarEnter(event)">
+            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar anime..." onkeypress="verificarEnter(event)">
             <button class="search-btn" onclick="pesquisarAnime()">🔍</button>
         </div>
     </header>
 
     <!-- Catálogo Principal -->
     <div id="catalog-section">
-        
-        <!-- Top 3 Animes em Destaque -->
-        <h2 class="section-title">🏆 Top 3 em Destaque</h2>
-        <div class="top3-container" id="top3-grid"></div>
-
-        <!-- Categoria: Ação -->
-        <h2 class="section-title">⚔️ Animes de Ação e Aventura</h2>
-        <div class="horizontal-scroll" id="action-grid"></div>
-
-        <!-- Categoria: Populares / Diversos -->
-        <h2 class="section-title">💖 Animes Populares e Pokémon</h2>
-        <div class="horizontal-scroll" id="popular-grid"></div>
-
+        <h2 class="section-title">🔥 Animes em Destaque (HiAnime API)</h2>
+        <div class="horizontal-scroll" id="home-grid">
+            <div class="loading">A carregar da API...</div>
+        </div>
     </div>
 
     <!-- Tela de Resultados da Pesquisa -->
@@ -96,33 +79,12 @@
         
         <video id="videoPlayer" controls autoplay playsinline></video>
 
-        <h3 style="margin-top: 15px; font-size: 14px; color: #ccc;">Episódios Disponíveis:</h3>
-        <div class="episodes-container" id="episodes-list"><div class="loading">A carregar episódios...</div></div>
+        <h3 style="margin-top: 15px; font-size: 14px; color: #ccc;">Episódios:</h3>
+        <div class="episodes-container" id="episodes-list"><div class="loading">A carregar episódios da API...</div></div>
     </div>
 
     <script>
         const API_RENDER_URL = "https://zrx-wa.onrender.com";
-        
-        // Base de dados expandida com imagens seguras (usando CDN alternativa do AniList/Jikan Cloud compatível com WebViews)
-        const catalogoAnimes = {
-            "21": { name: "One Piece", poster: "https://cdn.myanimelist.net/images/anime/1244/137368.jpg", id: "21" },
-            "51498": { name: "Jujutsu Kaisen", poster: "https://cdn.myanimelist.net/images/anime/1179/133860.jpg", id: "51498" },
-            "20": { name: "Naruto", poster: "https://cdn.myanimelist.net/images/anime/13/17405.jpg", id: "20" },
-            "16498": { name: "Attack on Titan", poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg", id: "16498" },
-            "38000": { name: "Demon Slayer", poster: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg", id: "38000" },
-            "56431": { name: "Solo Leveling", poster: "https://cdn.myanimelist.net/images/anime/1075/141416.jpg", id: "56431" },
-            "527": { name: "Pokémon", poster: "https://cdn.myanimelist.net/images/anime/6/2749.jpg", id: "527" },
-            "223": { name: "Dragon Ball Z", poster: "https://cdn.myanimelist.net/images/anime/1930/135249.jpg", id: "223" },
-            "269": { name: "Bleach", poster: "https://cdn.myanimelist.net/images/anime/3/40451.jpg", id: "269" },
-            "51105": { name: "Chainsaw Man", poster: "https://cdn.myanimelist.net/images/anime/1806/126216.jpg", id: "51105" },
-            "11061": { name: "Hunter x Hunter (2011)", poster: "https://cdn.myanimelist.net/images/anime/1337/99013.jpg", id: "11061" },
-            "1535": { name: "Death Note", poster: "https://cdn.myanimelist.net/images/anime/9/9453.jpg", id: "1535" },
-            "31964": { name: "Boku no Hero Academia", poster: "https://cdn.myanimelist.net/images/anime/10/78745.jpg", id: "31964" }
-        };
-
-        const top3Keys = ["21", "51498", "527"];
-        const actionKeys = ["16498", "38000", "56431", "11061"];
-        const popularKeys = ["20", "223", "269", "1535", "31964", "51105"];
 
         async function acordarServidor() {
             let statusBox = document.getElementById('serverStatus');
@@ -135,73 +97,89 @@
             }
         }
 
-        function inicializarCatalogo() {
-            renderizarGrids(top3Keys, actionKeys, popularKeys);
+        async function carregarHome() {
             acordarServidor();
+            let grid = document.getElementById('home-grid');
+            try {
+                // Ajusta conforme a rota real do teu backend para obter animes em destaque/recentes do HiAnime
+                let resposta = await fetch(`${API_RENDER_URL}/api/v2/anime/home`);
+                let dados = await resposta.json();
+                let lista = dados.data || dados.results || dados;
+
+                if (!lista || lista.length === 0) throw new Error("Sem dados");
+
+                grid.innerHTML = '';
+                lista.forEach(anime => {
+                    let card = document.createElement('div');
+                    card.className = 'card';
+                    // Suporta os formatos de ID comuns em scrapers do HiAnime (pode ser id ou slug)
+                    let animeId = anime.id || anime.animeId;
+                    card.onclick = () => abrirAnime(animeId, anime.name || anime.title);
+                    card.innerHTML = `
+                        <img src="${anime.poster || anime.image}" alt="${anime.name || anime.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
+                        <h3>${anime.name || anime.title}</h3>
+                    `;
+                    grid.appendChild(card);
+                });
+            } catch (e) {
+                grid.innerHTML = '<div class="loading">Erro ao ligar à API do Render. Verifica se o backend está ativo.</div>';
+            }
         }
 
-        function renderizarGrids(tKeys, aKeys, pKeys) {
-            let top3Grid = document.getElementById('top3-grid');
-            top3Grid.innerHTML = '';
-            tKeys.forEach((key, index) => {
-                let anime = catalogoAnimes[key];
-                if (!anime) return;
-                let card = document.createElement('div');
-                card.className = 'top3-card';
-                card.onclick = () => abrirAnime(key);
-                card.innerHTML = `
-                    <div class="top3-badge">Top ${index + 1}</div>
-                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
-                    <h3>${anime.name}</h3>
-                `;
-                top3Grid.appendChild(card);
-            });
+        async function pesquisarAnime() {
+            let query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
 
-            let actionGrid = document.getElementById('action-grid');
-            actionGrid.innerHTML = '';
-            aKeys.forEach(key => {
-                if (catalogoAnimes[key]) actionGrid.appendChild(criarCardHorizontal(key));
-            });
+            document.getElementById('catalog-section').style.display = 'none';
+            let searchSec = document.getElementById('search-results-section');
+            searchSec.style.display = 'block';
+            let searchGrid = document.getElementById('search-grid');
+            searchGrid.innerHTML = '<div class="loading">A pesquisar...</div>';
+            
+            document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
 
-            let popularGrid = document.getElementById('popular-grid');
-            popularGrid.innerHTML = '';
-            pKeys.forEach(key => {
-                if (catalogoAnimes[key]) popularGrid.appendChild(criarCardHorizontal(key));
-            });
+            try {
+                let resposta = await fetch(`${API_RENDER_URL}/api/v2/anime/search?q=${encodeURIComponent(query)}`);
+                let dados = await resposta.json();
+                let lista = dados.data || dados.results || dados;
+
+                searchGrid.innerHTML = '';
+                if (!lista || lista.length === 0) {
+                    searchGrid.innerHTML = '<div class="loading">Nenhum anime encontrado.</div>';
+                    return;
+                }
+
+                lista.forEach(anime => {
+                    let card = document.createElement('div');
+                    card.className = 'card';
+                    let animeId = anime.id || anime.animeId;
+                    card.onclick = () => abrirAnime(animeId, anime.name || anime.title);
+                    card.innerHTML = `
+                        <img src="${anime.poster || anime.image}" alt="${anime.name || anime.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
+                        <h3>${anime.name || anime.title}</h3>
+                    `;
+                    searchGrid.appendChild(card);
+                });
+            } catch (e) {
+                searchGrid.innerHTML = '<div class="loading">Erro na pesquisa.</div>';
+            }
         }
 
-        function criarCardHorizontal(key) {
-            let anime = catalogoAnimes[key];
-            let card = document.createElement('div');
-            card.className = 'card';
-            card.onclick = () => abrirAnime(key);
-            card.innerHTML = `
-                <img src="${anime.poster}" alt="${anime.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
-                <h3>${anime.name}</h3>
-            `;
-            return card;
-        }
-
-        async function abrirAnime(key) {
-            let anime = catalogoAnimes[key];
-
+        async function abrirAnime(animeId, animeName) {
             document.getElementById('catalog-section').style.display = 'none';
             document.getElementById('search-results-section').style.display = 'none';
             document.getElementById('watch-section').style.display = 'block';
-            document.getElementById('anime-title').innerText = anime.name;
+            document.getElementById('anime-title').innerText = animeName || "Anime";
 
             let epList = document.getElementById('episodes-list');
-            epList.innerHTML = '<div class="loading">A carregar episódios...</div>';
+            epList.innerHTML = '<div class="loading">A carregar episódios da API...</div>';
 
             try {
-                let resposta = await fetch(`${API_RENDER_URL}/api/v2/anime/episodes/${anime.id}`);
+                let resposta = await fetch(`${API_RENDER_URL}/api/v2/anime/episodes/${animeId}`);
                 let dados = await resposta.json();
-
                 let episodios = dados.data || dados.episodes || dados;
 
-                if (!episodios || episodios.length === 0) {
-                    throw new Error("Sem episódios na API");
-                }
+                if (!episodios || episodios.length === 0) throw new Error("Sem episódios");
 
                 epList.innerHTML = '';
                 episodios.forEach((ep, idx) => {
@@ -210,31 +188,35 @@
                     if (idx === 0) btn.classList.add('active');
                     btn.innerText = `Ep ${ep.episodeNumber || (idx + 1)}`;
                     
+                    let epId = ep.episodeId || ep.id || ep.number;
                     btn.onclick = () => {
                         document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
-                        reproduzirVideo(ep.url || ep.link || ep.file);
+                        carregarLinksEpisodio(epId);
                     };
                     epList.appendChild(btn);
                 });
 
-                if (episodios.length > 0) {
-                    reproduzirVideo(episodios[0].url || episodios[0].link || episodios[0].file);
-                }
+                // Carrega o primeiro episódio automaticamente
+                let primeiroEpId = episodios[0].episodeId || episodios[0].id || episodios[0].number;
+                carregarLinksEpisodio(primeiroEpId);
 
             } catch (e) {
-                // Fallback de segurança para o player funcionar mesmo se a API do Render falhar
-                epList.innerHTML = '';
-                let sampleEpBtn = document.createElement('button');
-                sampleEpBtn.className = 'ep-btn active';
-                sampleEpBtn.innerText = 'Episódio 1 (Teste Stream)';
-                sampleEpBtn.onclick = () => {
-                    reproduzirVideo("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8");
-                };
-                epList.appendChild(sampleEpBtn);
+                epList.innerHTML = '<div class="loading">Erro ao carregar os episódios do HiAnime.</div>';
+            }
+        }
+
+        async function carregarLinksEpisodio(epId) {
+            try {
+                let resposta = await fetch(`${API_RENDER_URL}/api/v2/anime/episode-srcs?id=${epId}`);
+                let dados = await resposta.json();
+                let sourceUrl = dados.sources?.[0]?.url || dados.url || dados.link;
                 
-                // Toca o stream de teste automaticamente para validar o player
-                reproduzirVideo("https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8");
+                if (sourceUrl) {
+                    reproduzirVideo(sourceUrl);
+                }
+            } catch (e) {
+                console.log("Erro ao obter link do episódio");
             }
         }
 
@@ -245,60 +227,26 @@
             
             if (urlStream.includes('.m3u8')) {
                 if (Hls.isSupported()) {
-                    if (window.currentHls) {
-                        window.currentHls.destroy();
-                    }
+                    if (window.currentHls) window.currentHls.destroy();
                     const hls = new Hls();
                     window.currentHls = hls;
                     hls.loadSource(urlStream);
                     hls.attachMedia(video);
                     hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        video.play().catch(err => console.log("Erro ao dar play:", err));
+                        video.play().catch(err => console.log(err));
                     });
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = urlStream;
-                    video.play().catch(err => console.log("Erro ao dar play:", err));
+                    video.play().catch(err => console.log(err));
                 }
             } else {
                 video.src = urlStream;
-                video.play().catch(err => console.log("Erro ao dar play:", err));
+                video.play().catch(err => console.log(err));
             }
-        }
-
-        function pesquisarAnime() {
-            let query = document.getElementById('searchInput').value.trim().toLowerCase();
-            if (!query) {
-                document.getElementById('search-results-section').style.display = 'none';
-                document.getElementById('catalog-section').style.display = 'block';
-                return;
-            }
-
-            document.getElementById('catalog-section').style.display = 'none';
-            let searchSec = document.getElementById('search-results-section');
-            searchSec.style.display = 'block';
-            
-            let searchGrid = document.getElementById('search-grid');
-            searchGrid.innerHTML = '';
-            document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
-
-            let encontrados = Object.keys(catalogoAnimes).filter(key => {
-                return catalogoAnimes[key].name.toLowerCase().includes(query);
-            });
-
-            if (encontrados.length === 0) {
-                searchGrid.innerHTML = '<div class="loading">Nenhum anime encontrado. Tenta outro nome (ex: Pokémon, Naruto).</div>';
-                return;
-            }
-
-            encontrados.forEach(key => {
-                searchGrid.appendChild(criarCardHorizontal(key));
-            });
         }
 
         function verificarEnter(event) {
-            if (event.key === 'Enter') {
-                pesquisarAnime();
-            }
+            if (event.key === 'Enter') pesquisarAnime();
         }
 
         function voltarCatalogo() {
@@ -312,12 +260,10 @@
             let video = document.getElementById('videoPlayer');
             video.pause();
             video.src = "";
-            if (window.currentHls) {
-                window.currentHls.destroy();
-            }
+            if (window.currentHls) window.currentHls.destroy();
         }
 
-        inicializarCatalogo();
+        carregarHome();
     </script>
 </body>
 </html>
