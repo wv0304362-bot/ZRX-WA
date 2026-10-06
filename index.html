@@ -221,11 +221,22 @@
                 let resposta = await fetch(`${API_URL}/episodes/${animeId}`);
                 let json = await resposta.json();
                 
-                // Extração robusta para lidar tanto com JSON direto como com wrappers `.data`
-                let episodios = Array.isArray(json) ? json : (json.data?.episodes || json.data || json.episodes);
+                console.log("RESPOSTA COMPLETA DO BACKEND (/episodes):", json);
+
+                let episodios = [];
+                if (Array.isArray(json)) {
+                    episodios = json;
+                } else if (json.data) {
+                    episodios = Array.isArray(json.data) ? json.data : (json.data.episodes || json.data.eps || json.data.list);
+                } else if (json.episodes) {
+                    episodios = json.episodes;
+                } else if (json.eps) {
+                    episodios = json.eps;
+                }
 
                 if (!episodios || !Array.isArray(episodios) || episodios.length === 0) {
-                    throw new Error("Sem episódios encontrados");
+                    epList.innerHTML = '<div class="loading">Nenhum episódio disponível para este anime.</div>';
+                    return;
                 }
 
                 epList.innerHTML = '';
@@ -233,9 +244,9 @@
                     let btn = document.createElement('button');
                     btn.className = 'ep-btn';
                     if (idx === 0) btn.classList.add('active');
-                    btn.innerText = `Ep ${ep.number || ep.episodeNumber || (idx + 1)}`;
+                    btn.innerText = `Ep ${ep.number || ep.episodeNumber || ep.ep || (idx + 1)}`;
                     
-                    let epId = ep.episodeId || ep.id;
+                    let epId = ep.episodeId || ep.id || ep.episode_id;
                     btn.onclick = () => {
                         document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
@@ -244,9 +255,8 @@
                     epList.appendChild(btn);
                 });
 
-                // Carrega o primeiro episódio automaticamente se existir ID válido
                 let primeiroEp = episodios[0];
-                let primeiroEpId = primeiroEp.episodeId || primeiroEp.id;
+                let primeiroEpId = primeiroEp.episodeId || primeiroEp.id || primeiroEp.episode_id;
                 if (primeiroEpId) {
                     carregarLinksEpisodio(primeiroEpId);
                 }
