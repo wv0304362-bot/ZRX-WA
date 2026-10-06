@@ -52,12 +52,14 @@
         .back-btn:hover { background: #444; }
 
         .loading { text-align: center; color: #aaa; padding: 30px; font-size: 15px; width: 100%; }
+        .server-status { background: #220000; border: 1px solid #e50914; color: #ff8888; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; margin-bottom: 15px; display: none; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>Zeryx Animes</h1>
+        <div id="serverStatus" class="server-status">A acordar o servidor no Render (pode demorar alguns segundos)...</div>
         <div class="search-container">
             <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar anime..." onkeypress="verificarEnter(event)">
             <button class="search-btn" onclick="pesquisarAnime()">🔍</button>
@@ -69,15 +71,15 @@
         
         <!-- Top 3 Animes em Destaque -->
         <h2 class="section-title">🏆 Top 3 em Destaque</h2>
-        <div class="top3-container" id="top3-grid"><div class="loading">A carregar capas oficiais...</div></div>
+        <div class="top3-container" id="top3-grid"></div>
 
         <!-- Categoria: Ação -->
         <h2 class="section-title">⚔️ Animes de Ação</h2>
-        <div class="horizontal-scroll" id="action-grid"><div class="loading">A carregar...</div></div>
+        <div class="horizontal-scroll" id="action-grid"></div>
 
         <!-- Categoria: Populares -->
         <h2 class="section-title">💖 Animes Populares</h2>
-        <div class="horizontal-scroll" id="romance-grid"><div class="loading">A carregar...</div></div>
+        <div class="horizontal-scroll" id="romance-grid"></div>
 
     </div>
 
@@ -94,34 +96,45 @@
         
         <video id="videoPlayer" controls autoplay></video>
 
-        <h3 style="margin-top: 15px; font-size: 14px; color: #ccc;">Episódios Disponíveis (Via API Render):</h3>
-        <div class="episodes-container" id="episodes-list"><div class="loading">A carregar episódios reais...</div></div>
+        <h3 style="margin-top: 15px; font-size: 14px; color: #ccc;">Episódios Disponíveis:</h3>
+        <div class="episodes-container" id="episodes-list"><div class="loading">A carregar episódios...</div></div>
     </div>
 
     <script>
         const API_RENDER_URL = "https://zrx-wa.onrender.com";
-        let catalogoAnimes = {};
-
-        // Base de dados segura com slugs padronizados testados para evitar erros 404
-        const catalogoFallback = {
-            "21": { name: "One Piece", poster: "https://cdn.myanimelist.net/images/anime/1244/137368.jpg", slug: "one-piece-21" },
-            "51498": { name: "Jujutsu Kaisen", poster: "https://cdn.myanimelist.net/images/anime/1179/133860.jpg", slug: "jujutsu-kaisen-2nd-season-51498" },
-            "20": { name: "Naruto", poster: "https://cdn.myanimelist.net/images/anime/13/17405.jpg", slug: "naruto-20" },
-            "16498": { name: "Attack on Titan", poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg", slug: "attack-on-titan-16498" },
-            "38000": { name: "Demon Slayer", poster: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg", slug: "demon-slayer-kimetsu-no-yaiba-38000" },
-            "56431": { name: "Solo Leveling", poster: "https://cdn.myanimelist.net/images/anime/1075/141416.jpg", slug: "solo-leveling-56431" },
-            "223": { name: "Dragon Ball Z", poster: "https://cdn.myanimelist.net/images/anime/1930/135249.jpg", slug: "dragon-ball-z-223" },
-            "269": { name: "Bleach", poster: "https://cdn.myanimelist.net/images/anime/3/40451.jpg", slug: "bleach-269" },
-            "51105": { name: "Chainsaw Man", poster: "https://cdn.myanimelist.net/images/anime/1806/126216.jpg", slug: "chainsaw-man-51105" }
+        
+        // Catálogo completo pré-carregado com links de imagem seguros do MyAnimeList
+        const catalogoAnimes = {
+            "21": { name: "One Piece", poster: "https://cdn.myanimelist.net/images/anime/1244/137368.jpg", id: "21" },
+            "51498": { name: "Jujutsu Kaisen", poster: "https://cdn.myanimelist.net/images/anime/1179/133860.jpg", id: "51498" },
+            "20": { name: "Naruto", poster: "https://cdn.myanimelist.net/images/anime/13/17405.jpg", id: "20" },
+            "16498": { name: "Attack on Titan", poster: "https://cdn.myanimelist.net/images/anime/10/47347.jpg", id: "16498" },
+            "38000": { name: "Demon Slayer", poster: "https://cdn.myanimelist.net/images/anime/1286/99889.jpg", id: "38000" },
+            "56431": { name: "Solo Leveling", poster: "https://cdn.myanimelist.net/images/anime/1075/141416.jpg", id: "56431" },
+            "223": { name: "Dragon Ball Z", poster: "https://cdn.myanimelist.net/images/anime/1930/135249.jpg", id: "223" },
+            "269": { name: "Bleach", poster: "https://cdn.myanimelist.net/images/anime/3/40451.jpg", id: "269" },
+            "51105": { name: "Chainsaw Man", poster: "https://cdn.myanimelist.net/images/anime/1806/126216.jpg", id: "51105" }
         };
 
         const top3Keys = ["21", "51498", "20"];
         const actionKeys = ["16498", "38000", "56431"];
         const popularKeys = ["223", "269", "51105"];
 
+        async function acordarServidor() {
+            let statusBox = document.getElementById('serverStatus');
+            statusBox.style.display = 'block';
+            try {
+                // Tenta fazer um ping rápido para acordar o Render
+                await fetch(`${API_RENDER_URL}/`, { method: 'GET', mode: 'no-cors' });
+                statusBox.style.display = 'none';
+            } catch (e) {
+                setTimeout(() => { statusBox.style.display = 'none'; }, 5000);
+            }
+        }
+
         function inicializarCatalogo() {
-            catalogoAnimes = { ...catalogoFallback };
             renderizarGrids(top3Keys, actionKeys, popularKeys);
+            acordarServidor();
         }
 
         function renderizarGrids(tKeys, aKeys, pKeys) {
@@ -135,7 +148,7 @@
                 card.onclick = () => abrirAnime(key);
                 card.innerHTML = `
                     <div class="top3-badge">Top ${index + 1}</div>
-                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
+                    <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
                     <h3>${anime.name}</h3>
                 `;
                 top3Grid.appendChild(card);
@@ -160,16 +173,13 @@
             card.className = 'card';
             card.onclick = () => abrirAnime(key);
             card.innerHTML = `
-                <img src="${anime.poster}" alt="${anime.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
+                <img src="${anime.poster}" alt="${anime.name}" loading="lazy">
                 <h3>${anime.name}</h3>
             `;
             return card;
         }
 
-        let animeAtualKey = null;
-
         async function abrirAnime(key) {
-            animeAtualKey = key;
             let anime = catalogoAnimes[key];
 
             document.getElementById('catalog-section').style.display = 'none';
@@ -178,17 +188,18 @@
             document.getElementById('anime-title').innerText = anime.name;
 
             let epList = document.getElementById('episodes-list');
-            epList.innerHTML = '<div class="loading">A carregar episódios da tua API do Render...</div>';
+            epList.innerHTML = '<div class="loading">A carregar episódios do servidor...</div>';
 
             try {
-                let resposta = await fetch(`${API_RENDER_URL}/api/v2/anime/episodes/${anime.slug}`);
+                // Ajusta para a rota correta da tua API no Render (ex: usando o ID do anime)
+                let resposta = await fetch(`${API_RENDER_URL}/api/v2/anime/episodes/${anime.id}`);
                 let dados = await resposta.json();
 
                 epList.innerHTML = '';
-                let episodios = dados.data || dados;
+                let episodios = dados.data || dados.episodes || dados;
 
                 if (!episodios || episodios.length === 0) {
-                    epList.innerHTML = '<div class="loading">Nenhum episódio encontrado para este anime.</div>';
+                    epList.innerHTML = '<div class="loading">Nenhum episódio cadastrado nesta rota.</div>';
                     return;
                 }
 
@@ -197,15 +208,42 @@
                     btn.className = 'ep-btn';
                     if (idx === 0) btn.classList.add('active');
                     btn.innerText = `Ep ${ep.episodeNumber || (idx + 1)}`;
+                    
                     btn.onclick = () => {
                         document.querySelectorAll('.ep-btn').forEach(b => b.classList.remove('active'));
                         btn.classList.add('active');
+                        reproduzirVideo(ep.url || ep.link || ep.file);
                     };
                     epList.appendChild(btn);
                 });
 
+                // Toca automaticamente o primeiro episódio se existir
+                if (episodios.length > 0) {
+                    reproduzirVideo(episodios[0].url || episodios[0].link || episodios[0].file);
+                }
+
             } catch (e) {
-                epList.innerHTML = '<div class="loading">Erro ao comunicar com a API do Render. Verifica se o servidor acordou.</div>';
+                epList.innerHTML = '<div class="loading">Erro ao comunicar com a API. Verifica se o servidor acordou.</div>';
+            }
+        }
+
+        function reproduzirVideo(urlStream) {
+            if (!urlStream) return;
+            let video = document.getElementById('videoPlayer');
+            
+            if (urlStream.includes('.m3u8')) {
+                if (Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(urlStream);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play(); });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = urlStream;
+                    video.play();
+                }
+            } else {
+                video.src = urlStream;
+                video.play();
             }
         }
 
@@ -240,7 +278,7 @@
                     catalogoAnimes[key] = {
                         name: anime.title,
                         poster: anime.images.jpg.large_image_url || anime.images.jpg.image_url,
-                        slug: anime.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + anime.mal_id
+                        id: key
                     };
                     searchGrid.appendChild(criarCardHorizontal(key));
                 });
@@ -268,7 +306,6 @@
             video.src = "";
         }
 
-        // Iniciar catálogo otimizado
         inicializarCatalogo();
     </script>
 </body>
