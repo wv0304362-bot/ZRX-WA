@@ -10,11 +10,20 @@ const episodesController = async (c: Context): Promise<Episode[]> => {
   if (!id) throw new validationError('id is required');
 
   const idNum = id.split('-').at(-1);
-  const ajaxUrl = `/ajax/v2/episode/list/${idNum}`;
-
-  const result = await axiosInstance(ajaxUrl, {
+  
+  // Tenta primeiro o v2 e, caso falhe, tenta o v1 ou rota alternativa
+  let ajaxUrl = `/ajax/v2/episode/list/${idNum}`;
+  let result = await axiosInstance(ajaxUrl, {
     headers: { Referer: `${config.baseurl}/watch/${id}` },
   });
+
+  if (!result.success || !result.data) {
+    // Tentativa alternativa com v1 caso o v2 retorne 404
+    ajaxUrl = `/ajax/v1/episode/list/${idNum}`;
+    result = await axiosInstance(ajaxUrl, {
+      headers: { Referer: `${config.baseurl}/watch/${id}` },
+    });
+  }
 
   if (!result.success || !result.data) {
     throw new validationError(result.message || 'make sure the id is correct', {
