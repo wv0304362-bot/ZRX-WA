@@ -91,21 +91,21 @@
             let statusBox = document.getElementById('serverStatus');
             statusBox.style.display = 'block';
 
-            // Lista de possíveis caminhos de rotas para compatibilidade com o teu backend no Render
+            // Testar com e sem o /hianime intermédio dependendo de como definiste o routes.ts
             const rotasPossiveis = [
                 `${API_URL}/api/v2/hianime/home`,
-                `${API_URL}/api/v1/hianime/home`,
-                `${API_URL}/hianime/home`,
-                `${API_URL}/api/home`
+                `${API_URL}/api/v2/home`
             ];
 
             let dados = null;
+            let rotaUsada = "";
             for (let rota of rotasPossiveis) {
                 try {
                     let resposta = await fetch(rota);
                     if (resposta.ok) {
                         let json = await resposta.json();
                         dados = json.data || json;
+                        rotaUsada = rota.replace('/home', '');
                         break;
                     }
                 } catch (e) {
@@ -116,13 +116,15 @@
             statusBox.style.display = 'none';
 
             if (!dados) {
-                container.innerHTML = '<div class="loading">Erro 404: Verifica se as rotas no teu `index.ts` correspondem aos endpoints esperados.</div>';
+                container.innerHTML = '<div class="loading">Erro 404: O servidor respondeu mas a rota /api/v2/home ou /api/v2/hianime/home não foi encontrada.</div>';
                 return;
             }
 
+            // Guarda a base correta das rotas para as próximas funções (pesquisa, episódios, etc.)
+            window.API_BASE = rotaUsada;
+
             container.innerHTML = '';
 
-            // Mapeamento das categorias comuns retornadas pela API estruturada
             const categoriasMapeadas = [
                 { key: 'spotlightAnimes', title: '⭐ Destaques (Spotlight)' },
                 { key: 'trendingAnimes', title: '🔥 Animes em Alta (Trending)' },
@@ -141,11 +143,9 @@
                 }
             });
 
-            // Se a API retornar um array direto sem categorias específicas, cria uma categoria única
             if (!encontrouAlguma && Array.isArray(dados)) {
                 criarSecaoCarrossel(container, '🔥 Todos os Animes', dados);
             } else if (!encontrouAlguma) {
-                // Tenta varrer quaisquer chaves que contenham arrays no objeto retornado
                 for (let chave in dados) {
                     if (Array.isArray(dados[chave]) && dados[chave].length > 0) {
                         criarSecaoCarrossel(container, chave.toUpperCase(), dados[chave]);
@@ -198,9 +198,10 @@
             document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
 
             try {
-                let resposta = await fetch(`${API_URL}/api/v2/hianime/search?q=${encodeURIComponent(query)}`);
+                let base = window.API_BASE || `${API_URL}/api/v2`;
+                let resposta = await fetch(`${base}/search?q=${encodeURIComponent(query)}`);
                 if (!resposta.ok) {
-                    resposta = await fetch(`${API_URL}/api/v1/hianime/search?q=${encodeURIComponent(query)}`);
+                    resposta = await fetch(`${API_URL}/api/v2/hianime/search?q=${encodeURIComponent(query)}`);
                 }
                 let dados = await resposta.json();
                 let lista = dados.data?.animes || dados.data || dados.results || dados;
@@ -237,14 +238,11 @@
             document.getElementById('anime-title').innerText = animeName || "Anime";
 
             let epList = document.getElementById('episodes-list');
-            epList.innerHTML = '<div class="loading">A carregar episódios da pasta src...</div>';
+            epList.innerHTML = '<div class="loading">A carregar episódios...</div>';
 
             try {
-                // Direciona diretamente para a rota de episódios da API
-                let resposta = await fetch(`${API_URL}/api/v2/hianime/anime/${animeId}/episodes`);
-                if (!resposta.ok) {
-                    resposta = await fetch(`${API_URL}/api/v1/hianime/anime/${animeId}/episodes`);
-                }
+                let base = window.API_BASE || `${API_URL}/api/v2`;
+                let resposta = await fetch(`${base}/anime/${animeId}/episodes`);
                 let dados = await resposta.json();
                 let episodios = dados.data?.episodes || dados.data || dados.episodes || dados;
 
@@ -276,10 +274,8 @@
 
         async function carregarLinksEpisodio(epId) {
             try {
-                let resposta = await fetch(`${API_URL}/api/v2/hianime/episode/sources?id=${epId}`);
-                if (!resposta.ok) {
-                    resposta = await fetch(`${API_URL}/api/v1/hianime/episode/sources?id=${epId}`);
-                }
+                let base = window.API_BASE || `${API_URL}/api/v2`;
+                let resposta = await fetch(`${base}/episode/sources?id=${epId}`);
                 let dados = await resposta.json();
                 let sourceUrl = dados.data?.sources?.[0]?.url || dados.sources?.[0]?.url || dados.url;
                 
