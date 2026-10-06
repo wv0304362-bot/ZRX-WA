@@ -218,7 +218,17 @@
             epList.innerHTML = '<div class="loading">A carregar episódios...</div>';
 
             try {
-                let resposta = await fetch(`${API_URL}/episodes/${animeId}`);
+                // Extrai apenas o ID numérico final caso venha no formato "nome-id"
+                let idLimpo = animeId;
+                if (typeof animeId === 'string' && animeId.includes('-')) {
+                    let partes = animeId.split('-');
+                    let possivelId = partes[partes.length - 1];
+                    if (!isNaN(possivelId)) {
+                        idLimpo = possivelId;
+                    }
+                }
+
+                let resposta = await fetch(`${API_URL}/episodes/${idLimpo}`);
                 let json = await resposta.json();
                 
                 console.log("RESPOSTA COMPLETA DO BACKEND (/episodes):", json);
