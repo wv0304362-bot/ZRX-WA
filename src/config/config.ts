@@ -1,6 +1,6 @@
 const config = {
-  baseurl: 'https://aniwatchtv.ro',
-  baseurl2: 'https://aniwatchtv.ro',
+  baseurl: 'https://animefire.one',
+  baseurl2: 'https://animefire.one',
   origin: '*',
   port: 5000,
 
