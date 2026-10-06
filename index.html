@@ -219,10 +219,14 @@
 
             try {
                 let resposta = await fetch(`${API_URL}/episodes/${animeId}`);
-                let dados = await resposta.json();
-                let episodios = dados.data?.episodes || dados.data || dados.episodes || dados;
+                let json = await resposta.json();
+                
+                // Extração robusta para lidar tanto com JSON direto como com wrappers `.data`
+                let episodios = Array.isArray(json) ? json : (json.data?.episodes || json.data || json.episodes);
 
-                if (!episodios || episodios.length === 0) throw new Error("Sem episódios");
+                if (!episodios || !Array.isArray(episodios) || episodios.length === 0) {
+                    throw new Error("Sem episódios encontrados");
+                }
 
                 epList.innerHTML = '';
                 episodios.forEach((ep, idx) => {
@@ -240,18 +244,22 @@
                     epList.appendChild(btn);
                 });
 
-                let primeiroEpId = episodios[0].episodeId || episodios[0].id;
-                carregarLinksEpisodio(primeiroEpId);
+                // Carrega o primeiro episódio automaticamente se existir ID válido
+                let primeiroEp = episodios[0];
+                let primeiroEpId = primeiroEp.episodeId || primeiroEp.id;
+                if (primeiroEpId) {
+                    carregarLinksEpisodio(primeiroEpId);
+                }
 
             } catch (e) {
                 epList.innerHTML = '<div class="loading">Erro ao carregar os episódios.</div>';
+                console.error(e);
             }
         }
 
         async function carregarLinksEpisodio(epId) {
             try {
-                // Ajustado para bater certo com a rota correta da sua API se houver (caso contrário, ajuste para a rota que devolve o stream)
-                let resposta = await fetch(`${API_URL}/episodes/${epId}/sources`); // ou a rota correta do seu backend
+                let resposta = await fetch(`${API_URL}/episodes/${epId}/sources`);
                 let dados = await resposta.json();
                 let sourceUrl = dados.data?.sources?.[0]?.url || dados.sources?.[0]?.url || dados.url;
                 
