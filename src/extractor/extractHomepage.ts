@@ -1,6 +1,6 @@
 import { load } from 'cheerio';
 import { Element } from 'domhandler';
-import { HomePage, TrendingAnime, AnimeFeatured } from '../types/anime';
+import { HomePage, SpotlightAnime, TrendingAnime, AnimeFeatured } from '../types/anime';
 
 export const extractHomepage = (html: string): HomePage => {
   const $ = load(html);
@@ -23,43 +23,61 @@ export const extractHomepage = (html: string): HomePage => {
     genres: [],
   };
 
-  // Seletores adaptados para a estrutura do AnimeFire
-  const $latestEpisodes = $('.latest-episodes .card, .row.ml--1 div[class*="col"]');
-  const $popular = $('.popular-animes .card, .anime-card');
+  const $spotlight =$('.deslide-wrap .swiper-wrapper .swiper-slide');
+  const $trending =$('#trending-home .swiper-container .swiper-slide');
+  const $featured =$('#anime-featured .anif-blocks .row .anif-block');
+  const $home =$('.block_area.block_area_home');
+  const $top10 =$('.block_area .cbox');
+  const $genres =$('.sb-genre-list');
 
-  // Extrair últimos episódios / animes recentes
-  $($latestEpisodes).each((i: number, el: Element) => {
-    const obj: AnimeFeatured = {
+  $($spotlight).each((i: number, el: Element) => {
+    const obj: SpotlightAnime = {
       title: null,
       alternativeTitle: null,
       id: null,
       poster: null,
+      rank: i + 1,
       type: null,
+      quality: null,
+      duration: null,
+      aired: null,
+      synopsis: null,
       episodes: {
         sub: null,
         dub: null,
         eps: null,
       },
     };
-
-    const linkEl = $(el).find('a').first();
-    const href = linkEl.attr('href') || '';
-    // Exemplo de link no AnimeFire: /animes/nome-do-anime-episodio-10 ou /animes/nome-do-anime
-    obj.id = href.split('/').filter(Boolean).pop() || null;
-
-    const titleEl = $(el).find('.card-title, h3, h4, .anime-title');
-    obj.title = titleEl.text().trim() || linkEl.attr('title') || null;
-
-    const imgEl = $(el).find('img');
+    obj.id = $(el).find('.desi-buttons a').first().attr('href')?.split('/').at(-1) || null;
+    
+    // Suporte para data-src e src normal
+    const imgEl = $(el).find('.deslide-cover .film-poster-img');
     obj.poster = imgEl.attr('data-src') || imgEl.attr('src') || null;
 
-    if (obj.title) {
-      response.latestEpisode.push(obj);
-    }
+    const titles = $(el).find('.desi-head-title');
+    obj.title = titles.text();
+    obj.alternativeTitle = titles.attr('data-jname') || null;
+
+    obj.synopsis = $(el).find('.desi-description').text().trim();
+
+    const details = $(el).find('.sc-detail');
+    obj.type = details.find('.scd-item').eq(0).text().trim();
+    obj.duration = details.find('.scd-item').eq(1).text().trim();
+    obj.aired = details.find('.scd-item.m-hide').text().trim();
+    obj.quality = details.find('.scd-item .quality').text().trim();
+
+    obj.episodes.sub = Number(details.find('.tick-sub').text().trim()) || null;
+    obj.episodes.dub = Number(details.find('.tick-dub').text().trim()) || null;
+
+    const epsText = details.find('.tick-eps').length
+      ? details.find('.tick-eps').text().trim()
+      : details.find('.tick-sub').text().trim();
+    obj.episodes.eps = Number(epsText) || null;
+
+    response.spotlight.push(obj);
   });
 
-  // Extrair animes populares / destaque
-  $($popular).each((i: number, el: Element) => {
+  $($trending).each((i: number, el: Element) => {
     const obj: TrendingAnime = {
       title: null,
       alternativeTitle: null,
@@ -68,40 +86,143 @@ export const extractHomepage = (html: string): HomePage => {
       id: null,
     };
 
-    const linkEl = $(el).find('a').first();
-    const href = linkEl.attr('href') || '';
-    obj.id = href.split('/').filter(Boolean).pop() || null;
+    const titleEl = $(el).find('.item .film-title');
+    obj.title = titleEl.text();
+    obj.alternativeTitle = titleEl.attr('data-jname') || null;
 
-    const titleEl = $(el).find('.card-title, h3, h4, .anime-title');
-    obj.title = titleEl.text().trim() || linkEl.attr('title') || null;
+    const imageEl = $(el).find('.film-poster img');
+    obj.poster = imageEl.attr('data-src') || imageEl.attr('src') || null;
+    obj.id = $(el).find('.film-poster').attr('href')?.split('/').at(-1) || null;
 
-    const imgEl = $(el).find('img');
-    obj.poster = imgEl.attr('data-src') || imgEl.attr('src') || null;
+    response.trending.push(obj);
+  });
 
-    if (obj.title) {
-      response.trending.push(obj);
+  $($featured).each((i: number, el: Element) => {
+    const data = $(el)
+      .find('.anif-block-ul ul li')
+      .map((index: number, item: Element) => {
+        const obj: AnimeFeatured = {
+          title: null,
+          alternativeTitle: null,
+          id: null,
+          poster: null,
+          type: null,
+          duration: null,
+          episodes: {
+            sub: null,
+            dub: null,
+            eps: null,
+          },
+        };
+        const titleEl = $(item).find('.film-detail .film-name a');
+        obj.title = titleEl.attr('title') || null;
+        obj.alternativeTitle = titleEl.attr('data-jname') || null;
+        obj.id = titleEl.attr('href')?.split('/').at(-1) || null;
+
+        const imgEl = $(item).find('.film-poster .film-poster-img');
+        obj.poster = imgEl.attr('data-src') || imgEl.attr('src') || null;
+
+        const infoItems = $(item).find('.fd-infor .fdi-item');
+        obj.type = infoItems.eq(0).text().trim() || null;
+        obj.duration = infoItems.eq(1).text().trim() || null;
+
+        obj.episodes.sub = Number($(item).find('.tick .tick-sub').text()) || null;
+        obj.episodes.dub = Number($(item).find('.tick .tick-dub').text()) || null;
+
+        const epsText = $(item).find('.fd-infor .tick-eps').length
+          ? $(item).find('.fd-infor .tick-eps').text()
+          : $(item).find('.fd-infor .tick-sub').text();
+
+        obj.episodes.eps = Number(epsText) || null;
+
+        return obj;
+      })
+      .get();
+
+    const dataType = $(el).find('.anif-block-header').text().replace(/\s+/g, '');
+    const normalizedDataType = (dataType.charAt(0).toLowerCase() +
+      dataType.slice(1)) as keyof HomePage;
+
+    (response[normalizedDataType] as AnimeFeatured[]) = data as AnimeFeatured[];
+  });
+
+  $($home).each((i: number, el: Element) => {
+    const data = $(el)
+      .find('.tab-content .film_list-wrap .flw-item')
+      .map((index: number, item: Element) => {
+        const obj: AnimeFeatured = {
+          title: null,
+          alternativeTitle: null,
+          id: null,
+          poster: null,
+          type: null,
+          episodes: {
+            sub: null,
+            dub: null,
+            eps: null,
+          },
+        };
+        const titleEl = $(item).find('.film-detail .film-name .dynamic-name, .film-detail .film-name a');
+        obj.title = titleEl.attr('title') || titleEl.text().trim() || null;
+        obj.alternativeTitle = titleEl.attr('data-jname') || null;
+        obj.id = $(item).find('.film-poster').attr('href')?.split('/').at(-1) || null;
+
+        const imgEl = $(item).find('.film-poster img');
+        obj.poster = imgEl.attr('data-src') || imgEl.attr('src') || null;
+
+        const episodesEl = $(item).find('.film-poster .tick');
+        obj.episodes.sub = Number($(episodesEl).find('.tick-sub').text()) || null;
+        obj.episodes.dub = Number($(episodesEl).find('.tick-dub').text()) || null;
+
+        const epsText = $(episodesEl).find('.tick-eps').length
+          ? $(episodesEl).find('.tick-eps').text()
+          : $(episodesEl).find('.tick-sub').text();
+
+        obj.episodes.eps = Number(epsText) || null;
+
+        return obj;
+      })
+      .get();
+
+    const dataType = $(el).find('.cat-heading').text().replace(/\s+/g, '');
+    const normalizedDataType = (dataType.charAt(0).toLowerCase() +
+      dataType.slice(1)) as keyof HomePage;
+
+    if ((normalizedDataType as string) === 'newOnHiAnime') {
+      response.newAdded = data;
+    } else if (normalizedDataType in response) {
+      (response[normalizedDataType] as AnimeFeatured[]) = data as AnimeFeatured[];
     }
   });
 
-  // Fallback caso traga dados genéricos
-  $('.card, article').each((i: number, el: Element) => {
-    const linkEl = $(el).find('a').first();
-    const href = linkEl.attr('href') || '';
-    const title = $(el).find('h3, h4, .card-title').text().trim();
-    const poster = $(el).find('img').attr('src') || $(el).find('img').attr('data-src');
+  const extractTopTen = (id: string): TrendingAnime[] => {
+    const res = $top10
+      .find(`${id} ul li`)
+      .map((i: number, el: Element) => {
+        const imgEl = $(el).find('.film-poster img');
+        const obj: TrendingAnime = {
+          title: $(el).find('.film-name a').text() || null,
+          rank: i + 1,
+          alternativeTitle: $(el).find('.film-name a').attr('data-jname') || null,
+          id: $(el).find('.film-name a').attr('href')?.split('/').pop() || null,
+          poster: imgEl.attr('data-src') || imgEl.attr('src') || null,
+        };
+        return obj;
+      })
+      .get();
+    return res;
+  };
 
-    if (title && href && !response.newAdded.some(item => item.title === title)) {
-      const obj: AnimeFeatured = {
-        title,
-        alternativeTitle: null,
-        id: href.split('/').filter(Boolean).pop() || null,
-        poster: poster || null,
-        type: null,
-        episodes: { sub: null, dub: null, eps: null },
-      };
-      response.newAdded.push(obj);
-    }
-  });
+  response.top10.today = extractTopTen('#top-viewed-day');
+  response.top10.week = extractTopTen('#top-viewed-week');
+  response.top10.month = extractTopTen('#top-viewed-month');
+  
+  $($genres)
+    .find('li')
+    .each((i: number, el: Element) => {
+      const genre = $(el).find('a').attr('title')?.toLocaleLowerCase() || '';
+      response.genres.push(genre);
+    });
 
   return response;
 };
