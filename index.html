@@ -14,18 +14,15 @@
         header { text-align: center; margin-bottom: 20px; }
         header h1 { color: #e50914; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
         
-        /* Barra de Pesquisa */
         .search-container { display: flex; gap: 8px; max-width: 500px; margin: 0 auto 20px auto; }
         .search-input { flex: 1; background: #181818; border: 1px solid #333; color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 14px; outline: none; }
         .search-input:focus { border-color: #e50914; }
         .search-btn { background: #e50914; color: #fff; border: none; padding: 0 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .search-btn:hover { background: #b80710; }
 
-        /* Secções e Títulos de Categorias */
         .category-section { margin-bottom: 25px; }
         .section-title { font-size: 15px; margin-bottom: 10px; border-left: 4px solid #e50914; padding-left: 8px; text-transform: uppercase; }
 
-        /* Carrossel Horizontal para cada Categoria */
         .horizontal-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin; scrollbar-color: #e50914 #222; }
         .horizontal-scroll::-webkit-scrollbar { height: 6px; }
         .horizontal-scroll::-webkit-scrollbar-thumb { background: #e50914; border-radius: 3px; }
@@ -35,7 +32,6 @@
         .card img { width: 100%; height: 170px; object-fit: cover; background: #222; display: block; }
         .card h3 { font-size: 12px; padding: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Tela do Player e Episódios */
         #watch-section { display: none; margin-top: 20px; }
         video { width: 100%; max-height: 480px; background: #000; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.7); }
         .episodes-container { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0; margin-top: 15px; scrollbar-width: thin; scrollbar-color: #e50914 #222; }
@@ -59,20 +55,17 @@
         </div>
     </header>
 
-    <!-- Catálogo Principal Dividido por Categorias em Carrossel -->
     <div id="catalog-section">
         <div id="categories-container">
             <div class="loading">A carregar categorias de animes...</div>
         </div>
     </div>
 
-    <!-- Tela de Resultados da Pesquisa -->
     <div id="search-results-section" style="display:none;">
         <h2 class="section-title" id="search-title-text">Resultados da Pesquisa</h2>
         <div class="horizontal-scroll" id="search-grid" style="flex-wrap: wrap; overflow-x: visible;"></div>
     </div>
 
-    <!-- Reprodução e Episódios -->
     <div id="watch-section">
         <button class="back-btn" onclick="voltarCatalogo()">⬅ Voltar ao Catálogo</button>
         <h2 id="anime-title" style="margin-bottom: 8px; font-size: 18px; color: #e50914;"></h2>
@@ -97,15 +90,17 @@
                 if (resposta.ok) {
                     let json = await resposta.json();
                     dados = json.data || json;
+                } else {
+                    console.error("Erro HTTP:", resposta.status);
                 }
             } catch (e) {
-                console.log("Erro ao carregar home");
+                console.error("Erro de rede ao carregar home:", e);
             }
 
             statusBox.style.display = 'none';
 
             if (!dados) {
-                container.innerHTML = '<div class="loading">Erro: Não foi possível obter dados da rota `/api/v2/home`.</div>';
+                container.innerHTML = '<div class="loading">Erro: Não foi possível obter dados da rota `/api/v2/home`. Verifique o CORS ou se o servidor no Render acordou.</div>';
                 return;
             }
 
@@ -223,7 +218,6 @@
             epList.innerHTML = '<div class="loading">A carregar episódios...</div>';
 
             try {
-                // Rota correspondente no teu routes.ts: router.get('/episodes/:id', ...)
                 let resposta = await fetch(`${API_URL}/episodes/${animeId}`);
                 let dados = await resposta.json();
                 let episodios = dados.data?.episodes || dados.data || dados.episodes || dados;
@@ -256,8 +250,8 @@
 
         async function carregarLinksEpisodio(epId) {
             try {
-                // Ajustado para bater certo com a estrutura do controlador de fontes de episódio
-                let resposta = await fetch(`${API_URL}/episode/sources?id=${epId}`);
+                // Ajustado para bater certo com a rota correta da sua API se houver (caso contrário, ajuste para a rota que devolve o stream)
+                let resposta = await fetch(`${API_URL}/episodes/${epId}/sources`); // ou a rota correta do seu backend
                 let dados = await resposta.json();
                 let sourceUrl = dados.data?.sources?.[0]?.url || dados.sources?.[0]?.url || dados.url;
                 
