@@ -1,6 +1,6 @@
 const config = {
-  baseurl: 'https://animefire.one',
-  baseurl2: 'https://animefire.one',
+  baseurl: 'https://hianime.at',
+  baseurl2: 'https://hianime.at',
   origin: '*',
   port: 5000,
 
