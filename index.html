@@ -84,44 +84,30 @@
     </div>
 
     <script>
-        const API_URL = "https://zrx-wa.onrender.com";
+        const API_URL = "https://zrx-wa.onrender.com/api/v2";
 
         async function carregarHome() {
             let container = document.getElementById('categories-container');
             let statusBox = document.getElementById('serverStatus');
             statusBox.style.display = 'block';
 
-            // Testar com e sem o /hianime intermédio dependendo de como definiste o routes.ts
-            const rotasPossiveis = [
-                `${API_URL}/api/v2/hianime/home`,
-                `${API_URL}/api/v2/home`
-            ];
-
             let dados = null;
-            let rotaUsada = "";
-            for (let rota of rotasPossiveis) {
-                try {
-                    let resposta = await fetch(rota);
-                    if (resposta.ok) {
-                        let json = await resposta.json();
-                        dados = json.data || json;
-                        rotaUsada = rota.replace('/home', '');
-                        break;
-                    }
-                } catch (e) {
-                    console.log("Tentativa falhou para:", rota);
+            try {
+                let resposta = await fetch(`${API_URL}/home`);
+                if (resposta.ok) {
+                    let json = await resposta.json();
+                    dados = json.data || json;
                 }
+            } catch (e) {
+                console.log("Erro ao carregar home");
             }
 
             statusBox.style.display = 'none';
 
             if (!dados) {
-                container.innerHTML = '<div class="loading">Erro 404: O servidor respondeu mas a rota /api/v2/home ou /api/v2/hianime/home não foi encontrada.</div>';
+                container.innerHTML = '<div class="loading">Erro: Não foi possível obter dados da rota `/api/v2/home`.</div>';
                 return;
             }
-
-            // Guarda a base correta das rotas para as próximas funções (pesquisa, episódios, etc.)
-            window.API_BASE = rotaUsada;
 
             container.innerHTML = '';
 
@@ -129,7 +115,7 @@
                 { key: 'spotlightAnimes', title: '⭐ Destaques (Spotlight)' },
                 { key: 'trendingAnimes', title: '🔥 Animes em Alta (Trending)' },
                 { key: 'latestEpisodeAnimes', title: '⚡ Últimos Episódios Atualizados' },
-                { key: 'topAiringAnimes', title: '🏆 Mais Assistidos / No Ar' },
+                { key: 'topAiringAnimes', title: '🏆 Mais Assistidos / No Air' },
                 { key: 'topUpcomingAnimes', title: '📅 Próximos Lançamentos' }
             ];
 
@@ -198,11 +184,7 @@
             document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
 
             try {
-                let base = window.API_BASE || `${API_URL}/api/v2`;
-                let resposta = await fetch(`${base}/search?q=${encodeURIComponent(query)}`);
-                if (!resposta.ok) {
-                    resposta = await fetch(`${API_URL}/api/v2/hianime/search?q=${encodeURIComponent(query)}`);
-                }
+                let resposta = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`);
                 let dados = await resposta.json();
                 let lista = dados.data?.animes || dados.data || dados.results || dados;
 
@@ -241,8 +223,8 @@
             epList.innerHTML = '<div class="loading">A carregar episódios...</div>';
 
             try {
-                let base = window.API_BASE || `${API_URL}/api/v2`;
-                let resposta = await fetch(`${base}/anime/${animeId}/episodes`);
+                // Rota correspondente no teu routes.ts: router.get('/episodes/:id', ...)
+                let resposta = await fetch(`${API_URL}/episodes/${animeId}`);
                 let dados = await resposta.json();
                 let episodios = dados.data?.episodes || dados.data || dados.episodes || dados;
 
@@ -274,8 +256,8 @@
 
         async function carregarLinksEpisodio(epId) {
             try {
-                let base = window.API_BASE || `${API_URL}/api/v2`;
-                let resposta = await fetch(`${base}/episode/sources?id=${epId}`);
+                // Ajustado para bater certo com a estrutura do controlador de fontes de episódio
+                let resposta = await fetch(`${API_URL}/episode/sources?id=${epId}`);
                 let dados = await resposta.json();
                 let sourceUrl = dados.data?.sources?.[0]?.url || dados.sources?.[0]?.url || dados.url;
                 
