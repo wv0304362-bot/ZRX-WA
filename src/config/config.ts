@@ -1,6 +1,6 @@
 const config = {
-  baseurl: 'https://hianimes.se',
-  baseurl2: 'https://hianimes.se',
+  baseurl: 'https://hianimes.ru',
+  baseurl2: 'https://hianimes.ru',
   origin: '*',
   port: 5000,
 
