@@ -38,7 +38,6 @@ router.get('/characters/:id', handler(charactersController));
 router.get('/character/:id', handler(characterDetailConroller));
 router.get('/episodes/:id', handler(episodesController));
 router.get('/servers/:episodeId', handler(serversController));
-router.get('/sources', handler(serversController)); // Rota adicionada para resolver o 404 das fontes
 router.get('/genres', handler(allGenresController));
 router.get('/news', handler(newsController));
 router.get('/random', handler(randomController));
