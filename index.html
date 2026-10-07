@@ -218,16 +218,7 @@
             epList.innerHTML = '<div class="loading">A carregar episódios...</div>';
 
             try {
-                let idLimpo = animeId;
-                if (typeof animeId === 'string' && animeId.includes('-')) {
-                    let partes = animeId.split('-');
-                    let possivelId = partes[partes.length - 1];
-                    if (!isNaN(possivelId)) {
-                        idLimpo = possivelId;
-                    }
-                }
-
-                let resposta = await fetch(`${API_URL}/episodes/${idLimpo}`);
+                let resposta = await fetch(`${API_URL}/episodes/${animeId}`);
                 let json = await resposta.json();
 
                 let episodios = [];
@@ -276,10 +267,24 @@
 
         async function carregarLinksEpisodio(epId) {
             try {
-                // Rota oficial correta da hianime-api para buscar as fontes/servidores do episódio
-                let resposta = await fetch(`${API_URL}/servers/${epId}`);
-                let dados = await resposta.json();
-                let sourceUrl = dados.data?.sources?.[0]?.url || dados.sources?.[0]?.url || dados.url || dados.data?.link;
+                // 1. Primeiro obtém os servidores disponíveis para o ID do episódio (rota correta do backend oficial)
+                let respServidores = await fetch(`${API_URL}/servers?id=${epId}`);
+                let dadosServidores = await respServidores.json();
+                
+                // Extrai a lista de servidores sub/dub disponíveis
+                let listaSub = dadosServidores.data?.sub || dadosServidores.sub || [];
+                let servidorAlvo = listaSub.length > 0 ? listaSub[0] : null;
+
+                if (!servidorAlvo || !servidorAlvo.serverId) {
+                    console.log("Nenhum servidor encontrado para este episódio.");
+                    return;
+                }
+
+                // 2. Pede o link de streaming (source) usando o ID do servidor obtido
+                let respSource = await fetch(`${API_URL}/sources?id=${epId}&server=${servidorAlvo.serverId}&type=sub`);
+                let dadosSource = await respSource.json();
+                
+                let sourceUrl = dadosSource.data?.sources?.[0]?.url || dadosSource.sources?.[0]?.url || dadosSource.url || dadosSource.data?.link;
                 
                 if (sourceUrl) {
                     reproduzirVideo(sourceUrl);
