@@ -218,7 +218,6 @@
             epList.innerHTML = '<div class="loading">A carregar episódios...</div>';
 
             try {
-                // Extrai apenas o ID numérico final caso venha no formato "nome-id"
                 let idLimpo = animeId;
                 if (typeof animeId === 'string' && animeId.includes('-')) {
                     let partes = animeId.split('-');
@@ -230,8 +229,6 @@
 
                 let resposta = await fetch(`${API_URL}/episodes/${idLimpo}`);
                 let json = await resposta.json();
-                
-                console.log("RESPOSTA COMPLETA DO BACKEND (/episodes):", json);
 
                 let episodios = [];
                 if (Array.isArray(json)) {
@@ -279,15 +276,16 @@
 
         async function carregarLinksEpisodio(epId) {
             try {
-                let resposta = await fetch(`${API_URL}/episodes/${epId}/sources`);
+                // Rota oficial correta da hianime-api para buscar as fontes/servidores do episódio
+                let resposta = await fetch(`${API_URL}/servers/${epId}`);
                 let dados = await resposta.json();
-                let sourceUrl = dados.data?.sources?.[0]?.url || dados.sources?.[0]?.url || dados.url;
+                let sourceUrl = dados.data?.sources?.[0]?.url || dados.sources?.[0]?.url || dados.url || dados.data?.link;
                 
                 if (sourceUrl) {
                     reproduzirVideo(sourceUrl);
                 }
             } catch (e) {
-                console.log("Erro ao obter link do stream");
+                console.log("Erro ao obter link do stream", e);
             }
         }
 
