@@ -131,7 +131,11 @@
     </nav>
 
     <script>
-        const API_URL = "/api/v2";
+        // Deteção automática do ambiente: se estiver no Render, usa o link do Render; senão, usa a Vercel/Local.
+        const API_URL = window.location.hostname.includes('onrender.com') 
+            ? "https://zrx-wa-21mt.onrender.com/api/v2" 
+            : "/api/v2";
+
         let animeAtualCache = null;
         let episodiosCache = [];
         let primeiroEpIdCache = null;
