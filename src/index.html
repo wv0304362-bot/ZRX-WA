@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeryx Animes - Streaming</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #0f0f0f; color: #fff; font-family: Arial, sans-serif; padding: 15px; padding-bottom: 80px; }
+        header { text-align: center; margin-bottom: 20px; }
+        header h1 { color: #e50914; font-size: 26px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        
+        .search-container { display: flex; gap: 8px; max-width: 500px; margin: 0 auto 20px auto; }
+        .search-input { flex: 1; background: #181818; border: 1px solid #333; color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 14px; outline: none; }
+        .search-input:focus { border-color: #e50914; }
+        .search-btn { background: #e50914; color: #fff; border: none; padding: 0 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .search-btn:hover { background: #b80710; }
+
+        .category-section { margin-bottom: 25px; }
+        .section-title { font-size: 15px; margin-bottom: 10px; border-left: 4px solid #e50914; padding-left: 8px; text-transform: uppercase; }
+
+        .horizontal-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin; scrollbar-color: #e50914 #222; }
+        .horizontal-scroll::-webkit-scrollbar { height: 6px; }
+        .horizontal-scroll::-webkit-scrollbar-thumb { background: #e50914; border-radius: 3px; }
+        
+        .card { min-width: 130px; width: 130px; background: #181818; border-radius: 8px; overflow: hidden; cursor: pointer; flex-shrink: 0; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+        .card:hover { transform: scale(1.04); box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3); }
+        .card img { width: 100%; height: 170px; object-fit: cover; background: #222; display: block; }
+        .card h3 { font-size: 12px; padding: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .grid-2x2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
+        .grid-2x2 .card { width: 100%; min-width: unset; }
+        .grid-2x2 .card img { height: 200px; }
+
+        #details-section { display: none; margin-top: 10px; text-align: center; }
+        .anime-hero { position: relative; width: 100%; max-width: 300px; height: 400px; margin: 0 auto 15px auto; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 25px rgba(229,9,20,0.4); }
+        .anime-hero img { width: 100%; height: 100%; object-fit: cover; }
+        .play-big-btn { background: #e50914; color: #fff; border: none; padding: 12px 35px; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(229,9,20,0.5); transition: background 0.2s; }
+        .play-big-btn:hover { background: #b80710; }
+        .fav-btn { background: #222; color: #ff4444; border: 1px solid #444; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; margin-bottom: 20px; margin-left: 10px; }
+
+        #watch-section { display: none; margin-top: 20px; }
+        video { width: 100%; max-height: 480px; background: #000; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.7); }
+        
+        .episodes-vertical-container { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; max-height: 300px; overflow-y: auto; padding-right: 5px; }
+        .ep-btn { background: #181818; color: #fff; border: 1px solid #333; padding: 12px 16px; border-radius: 6px; cursor: pointer; text-align: left; font-weight: bold; font-size: 14px; transition: background 0.2s, border-color 0.2s; width: 100%; }
+        .ep-btn:hover, .ep-btn.active { background: #e50914; border-color: #e50914; }
+
+        .back-btn { background: #222; color: #fff; border: 1px solid #555; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin-bottom: 15px; font-weight: bold; display: inline-block; }
+        .back-btn:hover { background: #444; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #121212; border-top: 1px solid #282828; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
+        .nav-item { background: none; border: none; color: #aaa; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; font-weight: bold; }
+        .nav-item.active, .nav-item:hover { color: #e50914; }
+
+        .icon-home { width: 18px; height: 18px; position: relative; border-bottom: 2px solid currentColor; }
+        .icon-home::before { content: ""; position: absolute; top: -6px; left: 2px; width: 14px; height: 14px; border-top: 2px solid currentColor; border-left: 2px solid currentColor; transform: rotate(45deg); }
+
+        .icon-heart { width: 16px; height: 16px; position: relative; transform: rotate(-45deg); background: currentColor; margin-top: 3px; }
+        .icon-heart::before, .icon-heart::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: currentColor; }
+        .icon-heart::before { top: -9px; left: 0; }
+        .icon-heart::after { left: 9px; top: 0; }
+
+        .loading { text-align: center; color: #aaa; padding: 30px; font-size: 15px; width: 100%; }
+        .server-status { background: #220000; border: 1px solid #e50914; color: #ff8888; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; margin-bottom: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Zeryx Animes</h1>
+        <div id="serverStatus" class="server-status">A ligar ao servidor...</div>
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar em todo o catalogo..." onkeypress="verificarEnter(event)">
+            <button class="search-btn" onclick="pesquisarAnime()">Pesquisar</button>
+        </div>
+    </header>
+
+    <div id="catalog-section">
+        <div id="categories-container">
+            <div class="loading">A carregar acervo...</div>
+        </div>
+    </div>
+
+    <div id="search-results-section" style="display:none;">
+        <h2 class="section-title" id="search-title-text">Resultados da Pesquisa</h2>
+        <div class="grid-2x2" id="search-grid"></div>
+    </div>
+
+    <div id="favorites-section" style="display:none;">
+        <h2 class="section-title">Meus Animes Salvos / Curtidos</h2>
+        <div class="grid-2x2" id="favorites-grid">
+            <div class="loading">Ainda nao tens animes salvos.</div>
+        </div>
+    </div>
+
+    <div id="details-section">
+        <button class="back-btn" onclick="voltarCatalogo()">Voltar</button>
+        <div class="anime-hero">
+            <img id="detail-poster" src="" alt="Capa">
+        </div>
+        <h2 id="detail-title" style="font-size: 22px; color: #fff; margin-bottom: 15px;"></h2>
+        <div>
+            <button class="play-big-btn" onclick="iniciarReproducaoDireta()">PLAY</button>
+            <button class="fav-btn" id="favToggleBtn" onclick="toggleFavoritoCurrent()">Curtir / Salvar</button>
+        </div>
+        <h3 class="section-title" style="text-align: left; margin-top: 20px;">Episódios</h3>
+        <div class="episodes-vertical-container" id="detail-episodes-list">
+            <div class="loading">A carregar episódios...</div>
+        </div>
+    </div>
+
+    <div id="watch-section">
+        <button class="back-btn" onclick="voltarDetalhes()">Voltar aos Detalhes</button>
+        <h2 id="anime-title" style="margin-bottom: 8px; font-size: 18px; color: #e50914;"></h2>
+        <video id="videoPlayer" controls autoplay playsinline></video>
+        <h3 style="margin-top: 15px; font-size: 14px; color: #ccc;">Episódios Disponíveis:</h3>
+        <div class="episodes-vertical-container" id="watch-episodes-list"></div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" id="navHome" onclick="mudarAba('home')">
+            <div class="icon-home"></div> Início
+        </button>
+        <button class="nav-item" id="navFav" onclick="mudarAba('fav')">
+            <div class="icon-heart"></div> Salvos
+        </button>
+    </nav>
+
+    <script>
+        const API_URL = "/api/v2";
+        let animeAtualCache = null;
+        let episodiosCache = [];
+        let primeiroEpIdCache = null;
+
+        async function carregarHome() {
+            let container = document.getElementById('categories-container');
+            let statusBox = document.getElementById('serverStatus');
+            statusBox.style.display = 'block';
+
+            let dados = null;
+            try {
+                let resposta = await fetch(`${API_URL}/home`);
+                if (resposta.ok) {
+                    let json = await resposta.json();
+                    dados = json.data || json;
+                }
+            } catch (e) {
+                console.error("Erro de rede:", e);
+            }
+
+            statusBox.style.display = 'none';
+
+            if (!dados) {
+                container.innerHTML = '<div class="loading">Erro ao obter dados do servidor.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            const categoriasMapeadas = [
+                { key: 'spotlightAnimes', title: 'Destaques' },
+                { key: 'trendingAnimes', title: 'Em Alta (Trending)' },
+                { key: 'latestEpisodeAnimes', title: 'Últimos Episódios' },
+                { key: 'topAiringAnimes', title: 'Mais Assistidos' },
+                { key: 'topUpcomingAnimes', title: 'Próximos Lançamentos' }
+            ];
+
+            let encontrou = false;
+            categoriasMapeadas.forEach(cat => {
+                let lista = dados[cat.key];
+                if (lista && Array.isArray(lista) && lista.length > 0) {
+                    encontrou = true;
+                    criarSecaoCarrossel(container, cat.title, lista);
+                }
+            });
+
+            if (!encontrou) {
+                for (let chave in dados) {
+                    if (Array.isArray(dados[chave]) && dados[chave].length > 0) {
+                        criarSecaoCarrossel(container, chave.toUpperCase(), dados[chave]);
+                    }
+                }
+            }
+        }
+
+        function criarSecaoCarrossel(pai, titulo, animes) {
+            let section = document.createElement('div');
+            section.className = 'category-section';
+
+            let h2 = document.createElement('h2');
+            h2.className = 'section-title';
+            h2.innerText = titulo;
+            section.appendChild(h2);
+
+            let scrollDiv = document.createElement('div');
+            scrollDiv.className = 'horizontal-scroll';
+
+            animes.forEach(anime => {
+                let card = document.createElement('div');
+                card.className = 'card';
+                let animeId = anime.id || anime.animeId;
+                let animeTitle = anime.name || anime.title;
+                let animePoster = anime.poster || anime.image || anime.img;
+
+                card.onclick = () => abrirDetalhesAnime(animeId, animeTitle, animePoster, anime);
+                card.innerHTML = `
+                    <img src="${animePoster}" alt="${animeTitle}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
+                    <h3>${animeTitle}</h3>
+                `;
+                scrollDiv.appendChild(card);
+            });
+
+            section.appendChild(scrollDiv);
+            pai.appendChild(section);
+        }
+
+        async function pesquisarAnime() {
+            let query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
+
+            mudarAba('search');
+            let searchGrid = document.getElementById('search-grid');
+            searchGrid.innerHTML = '<div class="loading">A pesquisar...</div>';
+            document.getElementById('search-title-text').innerText = `Resultados para: "${query}"`;
+
+            try {
+                let resposta = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`);
+                let dados = await resposta.json();
+                let lista = dados.data?.animes || dados.data || dados.results || dados;
+
+                searchGrid.innerHTML = '';
+                if (!lista || lista.length === 0) {
+                    searchGrid.innerHTML = '<div class="loading">Nenhum anime encontrado.</div>';
+                    return;
+                }
+
+                lista.forEach(anime => {
+                    let card = document.createElement('div');
+                    card.className = 'card';
+                    let animeId = anime.id || anime.animeId;
+                    let animeTitle = anime.name || anime.title;
+                    let animePoster = anime.poster || anime.image;
+
+                    card.onclick = () => abrirDetalhesAnime(animeId, animeTitle, animePoster, anime);
+                    card.innerHTML = `
+                        <img src="${animePoster}" alt="${animeTitle}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
+                        <h3>${animeTitle}</h3>
+                    `;
+                    searchGrid.appendChild(card);
+                });
+            } catch (e) {
+                searchGrid.innerHTML = '<div class="loading">Erro na pesquisa.</div>';
+            }
+        }
+
+        async function abrirDetalhesAnime(animeId, animeName, animePoster, animeObj) {
+            document.getElementById('catalog-section').style.display = 'none';
+            document.getElementById('search-results-section').style.display = 'none';
+            document.getElementById('favorites-section').style.display = 'none';
+            document.getElementById('watch-section').style.display = 'none';
+            
+            let detailsSec = document.getElementById('details-section');
+            detailsSec.style.display = 'block';
+
+            document.getElementById('detail-title').innerText = animeName || "Anime";
+            document.getElementById('detail-poster').src = animePoster || "";
+
+            animeAtualCache = { id: animeId, name: animeName, poster: animePoster, ...animeObj };
+            atualizarEstadoBotaoFavorito();
+
+            let epListContainer = document.getElementById('detail-episodes-list');
+            epListContainer.innerHTML = '<div class="loading">A carregar episódios...</div>';
+
+            try {
+                let resposta = await fetch(`${API_URL}/episodes/${animeId}`);
+                let json = await resposta.json();
+
+                episodiosCache = [];
+                if (Array.isArray(json)) {
+                    episodiosCache = json;
+                } else if (json.data) {
+                    episodiosCache = Array.isArray(json.data) ? json.data : (json.data.episodes || json.data.eps || json.data.list);
+                } else if (json.episodes) {
+                    episodiosCache = json.episodes;
+                } else if (json.eps) {
+                    episodiosCache = json.eps;
+                }
+
+                if (!episodiosCache || !Array.isArray(episodiosCache) || episodiosCache.length === 0) {
+                    epListContainer.innerHTML = '<div class="loading">Nenhum episódio disponível.</div>';
+                    return;
+                }
+
+                primeiroEpIdCache = episodiosCache[0].episodeId || episodiosCache[0].id || episodiosCache[0].episode_id;
+
+                epListContainer.innerHTML = '';
+                episodiosCache.forEach((ep, idx) => {
+                    let btn = document.createElement('button');
+                    btn.className = 'ep-btn';
+                    btn.innerText = `Episódio ${ep.number || ep.episodeNumber || ep.ep || (idx + 1)}`;
+                    let epId = ep.episodeId || ep.id || ep.episode_id;
+                    btn.onclick = () => {
+                        abrirPlayerEpisodio(epId, animeName);
+                    };
+                    epListContainer.appendChild(btn);
+                });
+
+            } catch (e) {
+                epListContainer.innerHTML = '<div class="loading">Erro ao carregar episódios.</div>';
+            }
+        }
+
+        function iniciarReproducaoDireta() {
+            if (primeiroEpIdCache) {
+                abrirPlayerEpisodio(primeiroEpIdCache, animeAtualCache.name);
+            }
+        }
+
+        async function abrirPlayerEpisodio(epId, animeName) {
+            document.getElementById('details-section').style.display = 'none';
+            let watchSec = document.getElementById('watch-section');
+            watchSec.style.display = 'block';
+            document.getElementById('anime-title').innerText = animeName || "Anime";
+
+            let watchEpList = document.getElementById('watch-episodes-list');
+            watchEpList.innerHTML = '';
+            episodiosCache.forEach((ep, idx) => {
+                let btn = document.createElement('button');
+                btn.className = 'ep-btn';
+                let currentEpId = ep.episodeId || ep.id || ep.episode_id;
+                if (currentEpId === epId) btn.classList.add('active');
+                btn.innerText = `Episódio ${ep.number || ep.episodeNumber || ep.ep || (idx + 1)}`;
+                btn.onclick = () => {
+                    document.querySelectorAll('#watch-episodes-list .ep-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    abrirPlayerEpisodio(currentEpId, animeName);
+                };
+                watchEpList.appendChild(btn);
+            });
+
+            try {
+                let respServidores = await fetch(`${API_URL}/servers?id=${epId}`);
+                let dadosServidores = await respServidores.json();
+                let listaSub = dadosServidores.data?.sub || dadosServidores.sub || [];
+                let servidorAlvo = listaSub.length > 0 ? listaSub[0] : null;
+
+                if (!servidorAlvo || !servidorAlvo.serverId) return;
+
+                let respSource = await fetch(`${API_URL}/sources?id=${epId}&server=${servidorAlvo.serverId}&type=sub`);
+                let dadosSource = await respSource.json();
+                let sourceUrl = dadosSource.data?.sources?.[0]?.url || dadosSource.sources?.[0]?.url || dadosSource.url || dadosSource.data?.link;
+
+                if (sourceUrl) {
+                    reproduzirVideo(sourceUrl);
+                }
+            } catch (e) {
+                console.error("Erro ao carregar stream:", e);
+            }
+        }
+
+        function reproduzirVideo(urlStream) {
+            let video = document.getElementById('videoPlayer');
+            video.pause();
+            if (urlStream.includes('.m3u8')) {
+                if (Hls.isSupported()) {
+                    if (window.currentHls) window.currentHls.destroy();
+                    const hls = new Hls();
+                    window.currentHls = hls;
+                    hls.loadSource(urlStream);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play(); });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = urlStream;
+                    video.play();
+                }
+            } else {
+                video.src = urlStream;
+                video.play();
+            }
+        }
+
+        function getFavoritos() {
+            try {
+                return JSON.parse(localStorage.getItem('zrx_favoritos') || '[]');
+            } catch(e) { return []; }
+        }
+
+        function toggleFavoritoCurrent() {
+            if (!animeAtualCache) return;
+            let favs = getFavoritos();
+            let index = favs.findIndex(f => f.id === animeAtualCache.id);
+            if (index >= 0) {
+                favs.splice(index, 1);
+            } else {
+                favs.push(animeAtualCache);
+            }
+            localStorage.setItem('zrx_favoritos', JSON.stringify(favs));
+            atualizarEstadoBotaoFavorito();
+        }
+
+        function atualizarEstadoBotaoFavorito() {
+            if (!animeAtualCache) return;
+            let favs = getFavoritos();
+            let btn = document.getElementById('favToggleBtn');
+            let existe = favs.some(f => f.id === animeAtualCache.id);
+            btn.innerText = existe ? "Salvo nos Curtidos" : "Curtir / Salvar";
+            btn.style.borderColor = existe ? "#e50914" : "#444";
+        }
+
+        function carregarFavoritosNaTela() {
+            let grid = document.getElementById('favorites-grid');
+            let favs = getFavoritos();
+            grid.innerHTML = '';
+            if (favs.length === 0) {
+                grid.innerHTML = '<div class="loading">Ainda nao tens animes salvos.</div>';
+                return;
+            }
+            favs.forEach(anime => {
+                let card = document.createElement('div');
+                card.className = 'card';
+                let animeId = anime.id || anime.animeId;
+                let animeTitle = anime.name || anime.title;
+                let animePoster = anime.poster || anime.image;
+                card.onclick = () => abrirDetalhesAnime(animeId, animeTitle, animePoster, anime);
+                card.innerHTML = `
+                    <img src="${animePoster}" alt="${animeTitle}" loading="lazy" onerror="this.src='https://via.placeholder.com/130x170/222/fff?text=Zeryx'">
+                    <h3>${animeTitle}</h3>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function mudarAba(aba) {
+            document.getElementById('catalog-section').style.display = 'none';
+            document.getElementById('search-results-section').style.display = 'none';
+            document.getElementById('favorites-section').style.display = 'none';
+            document.getElementById('details-section').style.display = 'none';
+            document.getElementById('watch-section').style.display = 'none';
+
+            document.getElementById('navHome').classList.remove('active');
+            document.getElementById('navFav').classList.remove('active');
+
+            let video = document.getElementById('videoPlayer');
+            video.pause();
+            video.src = "";
+            if (window.currentHls) window.currentHls.destroy();
+
+            if (aba === 'home') {
+                document.getElementById('catalog-section').style.display = 'block';
+                document.getElementById('navHome').classList.add('active');
+            } else if (aba === 'fav') {
+                document.getElementById('favorites-section').style.display = 'block';
+                document.getElementById('navFav').classList.add('active');
+                carregarFavoritosNaTela();
+            } else if (aba === 'search') {
+                document.getElementById('search-results-section').style.display = 'block';
+            }
+        }
+
+        function voltarCatalogo() {
+            mudarAba('home');
+        }
+
+        function voltarDetalhes() {
+            let video = document.getElementById('videoPlayer');
+            video.pause();
+            video.src = "";
+            if (window.currentHls) window.currentHls.destroy();
+            document.getElementById('watch-section').style.display = 'none';
+            document.getElementById('details-section').style.display = 'block';
+        }
+
+        function verificarEnter(event) {
+            if (event.key === 'Enter') pesquisarAnime();
+        }
+
+        carregarHome();
+    </script>
+</body>
+</html>
