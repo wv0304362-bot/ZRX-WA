@@ -1,13 +1,10 @@
 {
   "version": 2,
-  "routes": [
+  "outputDirectory": ".",
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "index.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "index.html"
+      "source": "/(.*)",
+      "destination": "/api/index.js"
     }
   ]
 }
